@@ -67,8 +67,16 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 			Com_sprintf(namebuf, sizeof(namebuf), "%s.%s", filename, fext);
 
 		ri.FS_ReadFile( namebuf, &buf.v );
+// XXX xqx
+		// We want to know when something is missing
+		if (!lod && !buf.u) {
+			Com_Printf("Could not find MD3 model file %s\n", namebuf);
+			//xq_break();
+		}
+// XXX -xqx
 		if(!buf.u)
 			continue;
+
 		
 		ident = LittleLong(* (unsigned *) buf.u);
 		if (ident == MD3_IDENT)

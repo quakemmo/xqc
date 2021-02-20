@@ -78,7 +78,7 @@ const char	*CG_PlaceString( int rank ) {
 =============
 CG_Obituary
 =============
-*/
+// XXX xqx
 static void CG_Obituary( entityState_t *ent ) {
 	int			mod;
 	int			target, attacker;
@@ -333,6 +333,8 @@ static void CG_Obituary( entityState_t *ent ) {
 	// we don't know what it was
 	CG_Printf( "%s died.\n", targetName );
 }
+// XXX -xqx
+*/
 
 //==========================================================================
 
@@ -484,14 +486,15 @@ void CG_PainEvent( centity_t *cent, int health ) {
 		return;
 	}
 
+	// XXX xqx removed _1 at the end of the file names
 	if ( health < 25 ) {
-		snd = "*pain25_1.wav";
+		snd = "*pain25.wav";
 	} else if ( health < 50 ) {
-		snd = "*pain50_1.wav";
+		snd = "*pain50.wav";
 	} else if ( health < 75 ) {
-		snd = "*pain75_1.wav";
+		snd = "*pain75.wav";
 	} else {
-		snd = "*pain100_1.wav";
+		snd = "*pain100.wav";
 	}
 	// play a gurp sound instead of a normal pain sound
 	if (CG_WaterLevel(cent) == 3) {
@@ -598,7 +601,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_FALL_MEDIUM:
 		DEBUGNAME("EV_FALL_MEDIUM");
 		// use normal pain sound
-		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100_1.wav" ) );
+		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100.wav" ) );
 		if ( clientNum == cg.predictedPlayerState.clientNum ) {
 			// smooth landing z changes
 			cg.landChange = -16;
@@ -607,7 +610,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FALL_FAR:
 		DEBUGNAME("EV_FALL_FAR");
-		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall.wav" ) );
 		cent->pe.painTime = cg.time;	// don't play a pain sound right after this
 		if ( clientNum == cg.predictedPlayerState.clientNum ) {
 			// smooth landing z changes
@@ -670,16 +673,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 		// boing sound at origin, jump sound on player
 		trap_S_StartSound ( cent->lerpOrigin, -1, CHAN_VOICE, cgs.media.jumpPadSound );
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump.wav" ) );
 		break;
 
 	case EV_JUMP:
 		DEBUGNAME("EV_JUMP");
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump.wav" ) );
 		break;
 	case EV_TAUNT:
 		DEBUGNAME("EV_TAUNT");
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*taunt.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*casted.wav" ) ); // XXX xqx taunt > casted
 		break;
 #ifdef MISSIONPACK
 	case EV_TAUNT_YES:
@@ -882,17 +885,48 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	//
 	// other events
 	//
+
+// XXX xqx
 	case EV_PLAYER_TELEPORT_IN:
 		DEBUGNAME("EV_PLAYER_TELEPORT_IN");
 		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.teleInSound );
 		CG_SpawnEffect( position);
 		break;
 
-	case EV_PLAYER_TELEPORT_OUT:
-		DEBUGNAME("EV_PLAYER_TELEPORT_OUT");
-		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.teleOutSound );
+	case EV_PLAYER_XP:
+		DEBUGNAME("EV_PLAYER_XP");
+		trap_S_StartLocalSound(SOUNDH("sound/player/questxp.wav"), CHAN_ANNOUNCER);
+		break;
+
+	case EV_PLAYER_DING:
+		DEBUGNAME("EV_PLAYER_DING");
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.dingSound );
 		CG_SpawnEffect(  position);
 		break;
+
+	case EV_PLAYER_TELEPORT_OUT:
+		DEBUGNAME("EV_PLAYER_TELEPORT_OUT");
+		//trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.teleOutSound );
+		//CG_SpawnEffect(  position);
+		break;
+
+	case EV_KICKABLE_TOUCH:
+		DEBUGNAME("EV_KICKABLE_TOUCH");
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.kickableTouchSound);
+		break;
+
+	case EV_KICKABLE_BOUNCE:
+		DEBUGNAME("EV_KICKABLE_BOUNCE");
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.kickableBounceSound);
+		break;
+
+	case EV_SPELL_HIT:
+		DEBUGNAME("EV_SPELL_HIT");
+		xq_pfx_spell_hit(cent);
+		break;
+
+// XXX -xqx
+
 
 	case EV_ITEM_POP:
 		DEBUGNAME("EV_ITEM_POP");
@@ -1172,7 +1206,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		if (CG_WaterLevel(cent) == 3) {
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*drown.wav"));
 		} else {
-			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, va("*death%i.wav", event - EV_DEATH1 + 1)));
+			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*death.wav")); // XXX xqx removed death1-3
 		}
 
 		break;
@@ -1180,7 +1214,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	case EV_OBITUARY:
 		DEBUGNAME("EV_OBITUARY");
-		CG_Obituary( es );
+// XXX xqx
+		//CG_Obituary( es );
+// XXX -xqx
 		break;
 
 	//

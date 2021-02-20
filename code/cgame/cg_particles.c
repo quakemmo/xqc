@@ -95,7 +95,7 @@ typedef enum
 
 #ifndef WOLF_PARTICLES
 static char *shaderAnimNames[MAX_SHADER_ANIMS] = {
-	"explode1",
+	//"explode1", // XXX xqx commented out
 	NULL
 };
 static qhandle_t shaderAnims[MAX_SHADER_ANIMS][MAX_SHADER_ANIM_FRAMES];
@@ -141,7 +141,7 @@ static float	shaderAnimSTRatio[MAX_SHADER_ANIMS] = {
 #ifdef WOLF_PARTICLES
 #define		MAX_PARTICLES	1024 * 8
 #else
-#define		MAX_PARTICLES 1024
+#define		MAX_PARTICLES 10240 // XXX xqx changed 1024 to 10240
 #endif
 
 cparticle_t	*active_particles, *free_particles;
@@ -1842,7 +1842,7 @@ void CG_ParticleBloodCloud (centity_t *cent, vec3_t origin, vec3_t dir)
 		
 		p->color = BLOODRED;
 		
-		p->alpha = 0.75;
+		p->alpha = 0.05; // XXX xqx 0.75 > 0.05
 		
 	}
 
@@ -1922,11 +1922,12 @@ void CG_ParticleDust (centity_t *cent, vec3_t origin, vec3_t dir)
 	if (dist < 1)
 		dist = 1;
 
+	dist = 1; // XXX xqx
 	VectorCopy (origin, point);
 
 	for (i=0; i<dist; i++)
 	{
-		VectorMA (point, crittersize, forward, point);	
+		//VectorMA (point, crittersize, forward, point);	 // XXX xqx
 				
 		if (!free_particles)
 			return;
@@ -1986,7 +1987,7 @@ void CG_ParticleDust (centity_t *cent, vec3_t origin, vec3_t dir)
 
 		p->roll = rand()%179;
 		
-		p->alpha = 0.75;
+		p->alpha = 0.05; // XXX xqx 0.75 > 0.05
 		
 	}
 

@@ -290,10 +290,19 @@ rescan:
 	if ( !strcmp( cmd, "disconnect" ) ) {
 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=552
 		// allow server to indicate why they were disconnected
-		if ( argc >= 2 )
-			Com_Error( ERR_SERVERDISCONNECT, "Server disconnected - %s", Cmd_Argv( 1 ) );
-		else
+		if ( argc >= 2 ) {
+		// XXX xqx - we might have a hint on what to do next here
+			if (xq_seq(Cmd_Argv(1), "charsel")) {
+				// Clear character name and reconnect - this should take us to a charsel screen
+				Cvar_Set("cl_charname", "");
+				CL_Reconnect_f();
+			} else {
+				Com_Error( ERR_SERVERDISCONNECT, "Server disconnected - %s", Cmd_Argv( 1 ) );
+			}
+		} else {
 			Com_Error( ERR_SERVERDISCONNECT, "Server disconnected" );
+		}
+		// XXX -xqx
 	}
 
 	if ( !strcmp( cmd, "bcs0" ) ) {
@@ -412,6 +421,33 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
+// XXX xqx
+	case CG_XQ_CON_NOTIFY:
+		Con_DrawConsole(1);
+		return 0;
+	case CG_XQ_ENCRYPT:
+		xq_encrypt((void *)args[1], (int64_t)VMA(2), (char *)VMA(3), (int64_t)VMA(4));
+		return 0;
+	case CG_XQ_DECRYPT:
+		xq_decrypt((void *)args[1], (int64_t)VMA(2), (char *)VMA(3), (int64_t)VMA(4));
+		return 0;
+	case CG_XQ_CRYPTOPAD:
+		return xq_crypto_pad((byte *)args[1], (byte *)VMA(2), (int64_t)VMA(3), (int64_t)VMA(4));
+	case CG_XQ_PERS_GET_I64:
+		return xq_pers_get_i64((char *)args[1], (int64_t *)args[2]);
+	case CG_XQ_PERS_SET_I64:
+		return xq_pers_set_i64((char *)args[1], (int64_t)args[2]);
+	case CG_XQ_GET_KEYS:
+		return xq_get_keys();
+	case CG_XQ_MOUSELOOK:
+		CL_XQ_MouselookToggle((int64_t)VMA(1));
+		return 0;
+	case CG_XQ_CLEARKEYS:
+		CL_XQ_ClearKeys();
+		return 0;
+	case CG_XQ_GETITEMFROMQUEUE:
+		return CL_XQ_GetItemFromQueue((xq_item_t *)args[1], (xq_cmdCookie_t *)args[2]);
+// XXX -xqx
 	case CG_ERROR:
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
 		return 0;
@@ -535,6 +571,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.RegisterModel( VMA(1) );
 	case CG_R_REGISTERSKIN:
 		return re.RegisterSkin( VMA(1) );
+// XXX xqx
+	case CG_R_XQ_TSHADER:
+		return re.XQ_TShader( VMA(1), args[2]);
+	case CG_R_XQ_SCREENSHOTZONING:
+		re.XQ_ScreenShotZoning();
+		return 0;
+// XXX -xqx
 	case CG_R_REGISTERSHADER:
 		return re.RegisterShader( VMA(1) );
 	case CG_R_REGISTERSHADERNOMIP:

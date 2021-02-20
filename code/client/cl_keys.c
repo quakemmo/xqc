@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 key up events are sent even if in console mode
 
+XXX xqx: experimental attempt at a parallel bind sets for mouse mode (MM)
+A few functions are duplicated and slightly modified, with MM_ prepended to their names.
+This needs to be redone properly when the quirks are figured out.
 */
 
 field_t	historyEditLines[COMMAND_HISTORY];
@@ -327,6 +330,84 @@ EDIT FIELDS
 =============================================================================
 */
 
+
+// XXX xqx
+int64_t xq_get_keys() {
+	return (int64_t)keys;
+}
+void xq_Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int sizew, int sizeh, qboolean showCursor, qboolean noColorEscape ) {
+	int		len;
+	int		drawLen;
+	int		prestep;
+	int		cursorChar;
+	char	str[MAX_STRING_CHARS];
+	int		i;
+
+	drawLen = edit->widthInChars - 1; // - 1 so there is always a space for the cursor
+	len = strlen( edit->buffer );
+
+
+	// guarantee that cursor will be visible
+	if ( len <= drawLen ) {
+		prestep = 0;
+	} else {
+		if ( edit->scroll + drawLen > len ) {
+			edit->scroll = len - drawLen;
+			if ( edit->scroll < 0 ) {
+				edit->scroll = 0;
+			}
+		}
+		prestep = edit->scroll;
+	}
+
+	if ( prestep + drawLen > len ) {
+		drawLen = len - prestep;
+	}
+
+	// extract <drawLen> characters from the field at <prestep>
+	if ( drawLen >= MAX_STRING_CHARS ) {
+		Com_Error( ERR_DROP, "drawLen >= MAX_STRING_CHARS" );
+	}
+
+	Com_Memcpy( str, edit->buffer + prestep, drawLen );
+	str[ drawLen ] = 0;
+
+	// draw it
+	float	color[4];
+	color[0] = color[1] = color[2] = color[3] = 1.0;
+	xq_SCR_DrawStringExtAssymetric(x, y, sizew, sizeh, str, color, qfalse, noColorEscape);
+
+	// draw the cursor
+	if (showCursor) {
+		if ((int)( cls.realtime >> 8) & 1) {
+			return;		// off blink
+		}
+
+		if (key_overstrikeMode) {
+			cursorChar = 11;
+		} else {
+			cursorChar = 10;
+		}
+
+		i = drawLen - strlen(str);
+
+        xq_SCR_DrawChar(x + (edit->cursor - prestep - i) * sizew, y+2, XQ_CHAT_WIDTH, XQ_CHAT_HEIGHT, cursorChar);
+	}
+}
+void xq_Field_Draw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape ) 
+{
+	xq_Field_VariableSizeDraw( edit, x, y, width, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, showCursor, noColorEscape );
+}
+
+void xq_Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape ) 
+{
+	xq_Field_VariableSizeDraw( edit, x, y, width, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, showCursor, noColorEscape );
+}
+void xq_Field_AnyDraw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape, int charwidth, int charheight) 
+{
+	xq_Field_VariableSizeDraw( edit, x, y, width, charwidth, charheight, showCursor, noColorEscape );
+}
+// XXX xqx
 
 /*
 ===================
@@ -772,9 +853,19 @@ void Message_Key( int key ) {
 			else
 				Com_sprintf( buffer, sizeof( buffer ), "say \"%s\"\n", chatField.buffer );
 
+// XXX xqx  
+			char *c = buffer;
+			while (*c) {
+				if (*c == '%') {
+					*c = 30;
+				}
+				c++;
+			}
+			if (VM_Call(cgvm, CG_XQ_LOCALCMD, S64_1((uint64_t)chatField.buffer), S64_2((uint64_t)chatField.buffer)) == qfalse) {
+				CL_AddReliableCommand(buffer, qfalse);
+			}
+// XXX -xqx 
 
-
-			CL_AddReliableCommand(buffer, qfalse);
 		}
 		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
 		Field_Clear( &chatField );
@@ -912,7 +1003,7 @@ void Key_SetBinding( int keynum, const char *binding ) {
 	if ( keys[ keynum ].binding ) {
 		Z_Free( keys[ keynum ].binding );
 	}
-		
+
 	// allocate memory for new binding
 	keys[keynum].binding = CopyString( binding );
 
@@ -920,6 +1011,25 @@ void Key_SetBinding( int keynum, const char *binding ) {
 	// file write will be triggered at the next opportunity
 	cvar_modifiedFlags |= CVAR_ARCHIVE;
 }
+// XXX xqx
+void MM_Key_SetBinding( int keynum, const char *binding ) {
+	if ( keynum < 0 || keynum >= MAX_KEYS ) {
+		return;
+	}
+
+	// free old bindings
+	if ( keys[ keynum ].mm_binding ) {
+		Z_Free( keys[ keynum ].mm_binding );
+	}
+
+	// allocate memory for new binding
+	keys[keynum].mm_binding = CopyString( binding );
+
+	// consider this like modifying an archived cvar, so the
+	// file write will be triggered at the next opportunity
+	cvar_modifiedFlags |= CVAR_ARCHIVE;
+}
+// XXX -xqx
 
 
 /*
@@ -934,6 +1044,15 @@ char *Key_GetBinding( int keynum ) {
 
 	return keys[ keynum ].binding;
 }
+// XXX xqx
+char *MM_Key_GetBinding( int keynum ) {
+	if ( keynum < 0 || keynum >= MAX_KEYS ) {
+		return "";
+	}
+
+	return keys[ keynum ].mm_binding;
+}
+// XXX -xqx
 
 /* 
 ===================
@@ -945,7 +1064,7 @@ int Key_GetKey(const char *binding) {
   int i;
 
   if (binding) {
-  	for (i=0 ; i < MAX_KEYS ; i++) {
+	for (i=0 ; i < MAX_KEYS ; i++) {
       if (keys[i].binding && Q_stricmp(binding, keys[i].binding) == 0) {
         return i;
       }
@@ -953,6 +1072,20 @@ int Key_GetKey(const char *binding) {
   }
   return -1;
 }
+// XXX xqx
+int MM_Key_GetKey(const char *binding) {
+  int i;
+
+  if (binding) {
+	for (i=0 ; i < MAX_KEYS ; i++) {
+      if (keys[i].mm_binding && Q_stricmp(binding, keys[i].mm_binding) == 0) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+// XXX -xqx
 
 /*
 ===================
@@ -978,6 +1111,27 @@ void Key_Unbind_f (void)
 
 	Key_SetBinding (b, "");
 }
+// XXX xqx
+void MM_Key_Unbind_f (void)
+{
+	int		b;
+
+	if (Cmd_Argc() != 2)
+	{
+		Com_Printf ("mm_unbind <key> : remove commands from a key (for mouse mode)\n");
+		return;
+	}
+
+	b = Key_StringToKeynum (Cmd_Argv(1));
+	if (b==-1)
+	{
+		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
+		return;
+	}
+
+	MM_Key_SetBinding (b, "");
+}
+// XXX -xqx
 
 /*
 ===================
@@ -987,12 +1141,22 @@ Key_Unbindall_f
 void Key_Unbindall_f (void)
 {
 	int		i;
-	
+
 	for (i=0 ; i < MAX_KEYS; i++)
 		if (keys[i].binding)
 			Key_SetBinding (i, "");
 }
 
+// XXX xqx
+void MM_Key_Unbindall_f (void)
+{
+	int		i;
+
+	for (i=0 ; i < MAX_KEYS; i++)
+		if (keys[i].mm_binding)
+			MM_Key_SetBinding (i, "");
+}
+// XXX -xqx
 
 /*
 ===================
@@ -1038,6 +1202,47 @@ void Key_Bind_f (void)
 
 	Key_SetBinding (b, cmd);
 }
+// XXX xqx
+void MM_Key_Bind_f (void)
+{
+	int			i, c, b;
+	char		cmd[1024];
+
+	c = Cmd_Argc();
+
+	if (c < 2)
+	{
+		Com_Printf ("mm_bind <key> [command] : attach a command to a key (for mouse mode)\n");
+		return;
+	}
+	b = Key_StringToKeynum (Cmd_Argv(1));
+	if (b==-1)
+	{
+		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
+		return;
+	}
+
+	if (c == 2)
+	{
+		if (keys[b].mm_binding && keys[b].mm_binding[0])
+			Com_Printf ("\"%s\" = \"%s\"\n", Key_KeynumToString(b), keys[b].mm_binding );
+		else
+			Com_Printf ("\"%s\" is not bound\n", Key_KeynumToString(b) );
+		return;
+	}
+
+// copy the rest of the command line
+	cmd[0] = 0;		// start out with a null string
+	for (i=2 ; i< c ; i++)
+	{
+		strcat (cmd, Cmd_Argv(i));
+		if (i != (c-1))
+			strcat (cmd, " ");
+	}
+
+	MM_Key_SetBinding (b, cmd);
+}
+// XXX -xqx
 
 /*
 ============
@@ -1059,6 +1264,21 @@ void Key_WriteBindings( fileHandle_t f ) {
 
 	}
 }
+// XXX xqx
+void MM_Key_WriteBindings( fileHandle_t f ) {
+	int		i;
+
+	FS_Printf (f, "mm_unbindall\n" );
+
+	for (i=0 ; i<MAX_KEYS ; i++) {
+		if (keys[i].mm_binding && keys[i].mm_binding[0] ) {
+			FS_Printf (f, "mm_bind %s \"%s\"\n", Key_KeynumToString(i), keys[i].mm_binding);
+
+		}
+
+	}
+}
+// XXX -xqx
 
 
 /*
@@ -1076,6 +1296,17 @@ void Key_Bindlist_f( void ) {
 		}
 	}
 }
+// XXX xqx
+void MM_Key_Bindlist_f( void ) {
+	int		i;
+
+	for ( i = 0 ; i < MAX_KEYS ; i++ ) {
+		if ( keys[i].mm_binding && keys[i].mm_binding[0] ) {
+			Com_Printf( "%s \"%s\"\n", Key_KeynumToString(i), keys[i].mm_binding );
+		}
+	}
+}
+// XXX -xqx
 
 /*
 ============
@@ -1146,6 +1377,12 @@ void CL_InitKeyCommands( void ) {
 	Cmd_SetCommandCompletionFunc( "unbind", Key_CompleteUnbind );
 	Cmd_AddCommand ("unbindall",Key_Unbindall_f);
 	Cmd_AddCommand ("bindlist",Key_Bindlist_f);
+// XXX xqx
+	Cmd_AddCommand ("mm_bind",MM_Key_Bind_f);
+	Cmd_AddCommand ("mm_bindlist",MM_Key_Bindlist_f);
+	Cmd_AddCommand ("mm_unbind",MM_Key_Unbind_f);
+	Cmd_AddCommand ("mm_unbindall",MM_Key_Unbindall_f);
+// XXX -xqx
 }
 
 /*
@@ -1181,9 +1418,16 @@ void CL_ParseBinding( int key, qboolean down, unsigned time )
 
 	if( clc.state == CA_DISCONNECTED && Key_GetCatcher( ) == 0 )
 		return;
-	if( !keys[key].binding || !keys[key].binding[0] )
-		return;
-	Q_strncpyz( buf, keys[key].binding, sizeof( buf ) );
+// XXX xqx
+	if (cl_xq_mousemode->integer) {
+		if( !keys[key].mm_binding || !keys[key].mm_binding[0] )
+			return;
+	} else {
+		if( !keys[key].binding || !keys[key].binding[0] )
+			return;
+	}
+// XXX xqx
+	Q_strncpyz( buf, (cl_xq_mousemode->integer ? keys[key].mm_binding : keys[key].binding), sizeof( buf ) ); // XXX xqx
 
 	// run all bind commands if console, ui, etc aren't reading keys
 	allCommands = ( Key_GetCatcher( ) == 0 );
@@ -1301,7 +1545,11 @@ void CL_KeyDownEvent( int key, unsigned time )
 	}
 
 	// send the bound action
-	CL_ParseBinding( key, qtrue, time );
+// XXX xqx
+	//if (!cl_xq_mousemode->integer || (key != K_ALT && key != K_CTRL && key != K_SHIFT)) {
+		CL_ParseBinding( key, qtrue, time );
+	//}
+// XXX -xqx
 
 	// distribute the key down event to the appropriate handler
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
@@ -1365,6 +1613,54 @@ Called by the system for both key up and key down events
 ===================
 */
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
+	// XXX xqx
+
+	// Special case for moving forward by clicking the left mouse button
+	// when in temp mouselook mode.
+	// This requires UpArrow to be set to +forward in mouse mode.
+	if (cl_xq_mousemode->integer && cl_xq_mouselook->integer) {
+		if (key == K_MOUSE1) {
+			if (down) {
+				CL_KeyDownEvent(K_UPARROW, time);
+			} else {
+				CL_KeyUpEvent(K_UPARROW, time);
+			}
+			return;
+		}
+	}
+	if (cl_xq_mousemode->integer) {
+		if (
+					key == K_MOUSE1
+				||  key == K_MOUSE2
+				||  key == K_ESCAPE
+				||  key == '1'
+				||  key == '2'
+				||  key == '3'
+				||  key == '4'
+				||  key == '5'
+				||  key == '6'
+			) {
+			if (cgvm) {
+				VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
+			}
+			if (key != K_ALT) {
+				return;
+            } 
+		}
+	}
+
+	if (cl_xq_mousemode->integer && cl_xq_amount_picker_running->integer) {
+		if (
+				key == K_ENTER
+			||  key == K_BACKSPACE
+			||  (key >= 48 && key <= 57) // 0 - 9
+		) {
+			VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
+			return;
+		}
+	}
+	// XXX -xqx
+
 	if( down )
 		CL_KeyDownEvent( key, time );
 	else
@@ -1452,7 +1748,7 @@ void Key_SetCatcher( int catcher ) {
 
 // This must not exceed MAX_CMD_LINE
 #define			MAX_CONSOLE_SAVE_BUFFER	1024
-#define			CONSOLE_HISTORY_FILE    "q3history"
+#define			CONSOLE_HISTORY_FILE    "client_history" // XXX xqx q3history > client_history
 static char	consoleSaveBuffer[ MAX_CONSOLE_SAVE_BUFFER ];
 static int	consoleSaveBufferSize = 0;
 

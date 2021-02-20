@@ -150,7 +150,6 @@ static void UI_DisplayDownloadInfo( const char *downloadName ) {
 		}
 	}
 }
-
 /*
 ========================
 UI_DrawConnectScreen
@@ -169,7 +168,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	if ( !overlay ) {
 		// draw the dialog background
 		UI_SetColor( color_white );
-		UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
+		UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackNoLogoShader ); // XXX xqx changed uis.menuBackShader to uis.menuBackNoLogoShader
 	}
 
 	// see what information we should display
@@ -177,10 +176,10 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	info[0] = '\0';
 	if( trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) ) ) {
-		UI_DrawProportionalString( 320, 16, va( "Loading %s", Info_ValueForKey( info, "mapname" ) ), UI_BIGFONT|UI_CENTER|UI_DROPSHADOW, color_white );
+		//UI_DrawProportionalString( 320, 16, va( "Loading %s", Info_ValueForKey( info, "mapname" ) ), UI_BIGFONT|UI_CENTER|UI_DROPSHADOW, color_white );
 	}
 
-	UI_DrawProportionalString( 320, 64, va("Connecting to %s", cstate.servername), UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+	//UI_DrawProportionalString( 320, 64, va("Connecting to %s", cstate.servername), UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	//UI_DrawProportionalString( 320, 96, "Press Esc to abort", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 
 	// display global MOTD at bottom
@@ -191,6 +190,18 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	if ( cstate.connState < CA_CONNECTED ) {
 		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	}
+// XXX xqx
+	if (!Q_strncmp(cstate.messageString, "1\n", 40)) {
+		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, "LOGIN FAILED - RERUN LAUNCHER", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+	} else if (cstate.messageString[0] == '2') {
+		UI_XQCharselMenu(cstate.messageString);
+		//UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, "CHAR SELECTOR", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+	} else {
+		if (Q_strncmp(cstate.messageString, "0\n", 40) && (Q_strncmp(cstate.messageString, "", 40))) {
+			trap_Cmd_ExecuteText( EXEC_NOW, va("connect %s\n", cstate.messageString));
+		}
+	}
+// XXX -xqx
 
 #if 0
 	// display password field
@@ -237,7 +248,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 				return;
 			}
 		}
-		s = "Awaiting gamestate...";
+		s = "Entering world...";
 		break;
 	case CA_LOADING:
 		return;

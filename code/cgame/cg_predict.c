@@ -62,7 +62,7 @@ void CG_BuildSolidList( void ) {
 		cent = &cg_entities[ snap->entities[ i ].number ];
 		ent = &cent->currentState;
 
-		if ( ent->eType == ET_ITEM || ent->eType == ET_PUSH_TRIGGER || ent->eType == ET_TELEPORT_TRIGGER ) {
+		if ( ent->eType == ET_ITEM || ent->eType == ET_PUSH_TRIGGER || ent->eType == ET_TELEPORT_TRIGGER) {
 			cg_triggerEntities[cg_numTriggerEntities] = cent;
 			cg_numTriggerEntities++;
 			continue;
@@ -84,6 +84,7 @@ CG_ClipMoveToEntities
 */
 static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end,
 							int skipNumber, int mask, trace_t *tr ) {
+
 	int			i, x, zd, zu;
 	trace_t		trace;
 	entityState_t	*ent;
@@ -91,6 +92,26 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins, const
 	vec3_t		bmins, bmaxs;
 	vec3_t		origin, angles;
 	centity_t	*cent;
+
+	// XXX xqx - ugly hack to make ground spawns and corpses clickable,
+	// yet not have them get in the way when moving around. This must be redone properly.
+	if (mask & CONTENTS_CORPSE) {
+		snapshot_t *snap = cg.snap;
+		for (i = 0;  i < snap->numEntities;  i++) {
+			cent = &cg_entities[snap->entities[i].number];
+			ent = &cent->currentState;
+			if (ent->eType == ET_XQ_CORPSE) {
+				cent->nextState.solid = 4200463; // q3 playermins/maxs
+				cent->currentState.solid = cent->nextState.solid;
+			} else if (ent->eType == ET_XQ_GROUND) {
+				cent->nextState.solid = 3145737; // Ground spawn box mins/maxs
+				cent->currentState.solid = cent->nextState.solid;
+			}
+		}
+		CG_BuildSolidList();
+	}
+	// XXX -xqx
+
 
 	for ( i = 0 ; i < cg_numSolidEntities ; i++ ) {
 		cent = cg_solidEntities[ i ];
@@ -135,6 +156,19 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins, const
 			return;
 		}
 	}
+	// XXX xqx
+	// reset stuff back to non solid
+	if (mask & CONTENTS_CORPSE) {
+		snapshot_t *snap = cg.snap;
+		for (i = 0;  i < snap->numEntities;  i++) {
+			cent = &cg_entities[snap->entities[i].number];
+			ent = &cent->currentState;
+			if (ent->eType == ET_XQ_GROUND) {
+				cent->currentState.solid = cent->nextState.solid = 0;
+			}
+		}
+	}
+	// XXX -xqx
 }
 
 /*
@@ -368,7 +402,9 @@ static void CG_TouchTriggerPrediction( void ) {
 		}
 
 		if ( ent->eType == ET_TELEPORT_TRIGGER ) {
-			cg.hyperspace = qtrue;
+// XXX xqx
+			//cg.hyperspace = qtrue;
+// XXX -xqx
 		} else if ( ent->eType == ET_PUSH_TRIGGER ) {
 			BG_TouchJumpPad( &cg.predictedPlayerState, ent );
 		}
@@ -573,6 +609,7 @@ void CG_PredictPlayerState( void ) {
 			}
 		}
 
+// XXX xqx - remove that? \/
 		// don't predict gauntlet firing, which is only supposed to happen
 		// when it actually inflicts damage
 		cg_pmove.gauntletHit = qfalse;

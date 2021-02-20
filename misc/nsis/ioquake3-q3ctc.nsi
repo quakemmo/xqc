@@ -10,7 +10,8 @@
 ; uncomment if the mod works without baseq3
 ;!define STANDALONE
 
-!define MUI_ICON "../quake3.ico"
+; XXX xqx quake3 > xq
+!define MUI_ICON "../xq.ico"
 
 !macro FILES
   File ctc0.pk3

@@ -80,6 +80,20 @@ cvar_t	*cl_aviMotionJpeg;
 cvar_t	*cl_forceavidemo;
 
 cvar_t	*cl_freelook;
+// XXX xqx
+cvar_t	*cl_headless;
+cvar_t	*cl_xq_mousemode;
+cvar_t	*cl_xq_mouselook;
+cvar_t	*cl_xq_amount_picker_running;
+cvar_t	*cl_xq_chat_x;
+cvar_t	*cl_xq_chat_y;
+cvar_t	*cl_xq_chat_w;
+cvar_t	*cl_xq_chat_h;
+cvar_t	*cl_xq_chat_type_x;
+cvar_t	*cl_xq_chat_type_y;
+cvar_t	*cl_xq_serverip;
+cvar_t	*xq_debugInfo;
+// XXX -xqx
 cvar_t	*cl_sensitivity;
 
 cvar_t	*cl_mouseAccel;
@@ -1241,6 +1255,7 @@ Called by Com_GameRestart
 */
 void CL_ClearMemory(qboolean shutdownRef)
 {
+	if (cgvm) VM_Call(cgvm, CG_XQ_DEINIT); // XXX xqx - free XQ related memory structures that have been dynamically allocated
 	// shutdown all the client stuff
 	CL_ShutdownAll(shutdownRef);
 
@@ -1691,6 +1706,7 @@ CL_Connect_f
 ================
 */
 void CL_Connect_f( void ) {
+	if (re.XQ_ScreenShotZoning) re.XQ_ScreenShotZoning(); // XXX xqx
 	char	server[MAX_OSPATH];
 	const char	*serverString;
 	int argc = Cmd_Argc();
@@ -2370,6 +2386,10 @@ void CL_CheckForResend( void ) {
 		// with a meaningful message
 		Com_sprintf(data, sizeof(data), "getchallenge %d %s", clc.challenge, com_gamename->string);
 
+// XXX xqx
+		clc.serverAddress.keyid = xq_getkeyid();
+		Q_strncpyz(clc.serverAddress.key, xq_getkeybyid(0, NULL), sizeof(clc.serverAddress.key));
+// XXX -xqx
 		NET_OutOfBandPrint(NS_CLIENT, clc.serverAddress, "%s", data);
 		break;
 		
@@ -2392,6 +2412,10 @@ void CL_CheckForResend( void ) {
 		Info_SetValueForKey( info, "challenge", va("%i", clc.challenge ) );
 		
 		Com_sprintf( data, sizeof(data), "connect \"%s\"", info );
+// XXX xqx
+		clc.serverAddress.keyid = xq_getkeyid();
+		Q_strncpyz(clc.serverAddress.key, xq_getkeybyid(0, NULL), sizeof(clc.serverAddress.key));
+// XXX -xqx
 		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) data, strlen ( data ) );
 		// the most current userinfo has been sent, so watch for any
 		// newer changes to userinfo variables
@@ -2780,6 +2804,15 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 		}
 		return;
 	}
+// XXX xqx
+	// same as "print", except we don't go through Com_Printf() - used for character selection UI screen
+	if ( !Q_stricmp(c, "printskipconsole") ) {
+		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareAdr( from, cls.rconAddress ) ) {
+			s = MSG_ReadString( msg );
+			Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
+		}
+		return;
+	}
 
 	// list of servers sent back by a master server (classic)
 	if ( !Q_strncmp(c, "getserversResponse", 18) ) {
@@ -2805,6 +2838,7 @@ A packet has arrived from the main event loop
 =================
 */
 void CL_PacketEvent( netadr_t from, msg_t *msg ) {
+
 	int		headerBytes;
 
 	clc.lastPacketTime = cls.realtime;
@@ -3045,10 +3079,10 @@ void CL_Frame ( int msec ) {
 	CL_SetCGameTime();
 
 	// update the screen
-	SCR_UpdateScreen();
+if (!cl_headless->integer) SCR_UpdateScreen(); // XXX xqx added headless check
 
 	// update audio
-	S_Update();
+	if (!cl_headless->integer) S_Update(); // XXX xqx added headless check
 
 #ifdef USE_VOIP
 	CL_CaptureVoip();
@@ -3061,7 +3095,7 @@ void CL_Frame ( int msec ) {
 	// advance local effects for next frame
 	SCR_RunCinematic();
 
-	Con_RunConsole();
+	if (!cl_headless->integer) Con_RunConsole(); // XXX xqx added headless check
 
 	cls.framecount++;
 }
@@ -3092,6 +3126,10 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( int prin
 		Com_Printf (S_COLOR_RED "%s", msg);			// red
 	} else if ( print_level == PRINT_DEVELOPER ) {
 		Com_DPrintf (S_COLOR_RED "%s", msg);		// red - developer only
+// XXX xqx - some developer stuff shouldn't be red
+	} else if ( print_level == PRINT_DEVELOPER_WHITE ) {
+		Com_DPrintf (S_COLOR_WHITE "%s", msg);		// white - developer only
+// XXX -xqx
 	}
 }
 
@@ -3547,6 +3585,20 @@ void CL_Init( void ) {
 	cl_sensitivity = Cvar_Get ("sensitivity", "5", CVAR_ARCHIVE);
 	cl_mouseAccel = Cvar_Get ("cl_mouseAccel", "0", CVAR_ARCHIVE);
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
+// XXX xqx
+	cl_headless = Cvar_Get("cl_headless", "0", CVAR_TEMP);
+	cl_xq_mousemode = Cvar_Get("cl_xq_mousemode", "0", CVAR_USERINFO);
+	cl_xq_mouselook = Cvar_Get("cl_xq_mouselook", "0", CVAR_TEMP);
+	cl_xq_amount_picker_running = Cvar_Get( "cl_xq_amount_picker_running", "0", CVAR_TEMP );
+	cl_xq_chat_x = Cvar_Get( "cl_xq_chat_x", "0", CVAR_TEMP );
+	cl_xq_chat_y = Cvar_Get( "cl_xq_chat_y", "0", CVAR_TEMP );
+	cl_xq_chat_w = Cvar_Get( "cl_xq_chat_w", "0", CVAR_TEMP );
+	cl_xq_chat_h = Cvar_Get( "cl_xq_chat_h", "0", CVAR_TEMP );
+	cl_xq_chat_type_x = Cvar_Get( "cl_xq_chat_type_x", "0", CVAR_TEMP );
+	cl_xq_chat_type_y = Cvar_Get( "cl_xq_chat_type_y", "0", CVAR_TEMP );
+	xq_debugInfo = Cvar_Get( "xq_debugInfo", "0", CVAR_TEMP);
+	xq_pers_init();
+// XXX -xqx
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
@@ -3617,10 +3669,12 @@ void CL_Init( void ) {
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
 
+	Cvar_Get ("snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
+	cl_rate = Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
+/*
 	// userinfo
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
-	cl_rate = Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
+	// XXX xqx commented out
 	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("team_model", "james", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -3633,8 +3687,14 @@ void CL_Init( void ) {
 	Cvar_Get ("teamtask", "0", CVAR_USERINFO );
 	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-
 	Cvar_Get ("password", "", CVAR_USERINFO);
+*/
+// XXX xqx
+	Cvar_Get ("cl_acctname", "", CVAR_USERINFO );
+	Cvar_Get ("cl_crypto_keyid", "", CVAR_USERINFO );
+	Cvar_Get ("cl_charname", "", CVAR_USERINFO );
+// XXX -xqx
+
 	Cvar_Get ("cg_predictItems", "1", CVAR_USERINFO | CVAR_ARCHIVE );
 
 #ifdef USE_MUMBLE
@@ -4263,6 +4323,11 @@ void CL_GlobalServers_f( void ) {
 		Q_strcat(command, sizeof(command), Cmd_Argv(i));
 	}
 
+// XXX xqx
+    to.keyid = xq_getkeyid();
+    Q_strncpyz(to.key, xq_getkeybyid(0, NULL), sizeof(to.key));
+// XXX -xqx
+
 	NET_OutOfBandPrint( NS_SERVER, to, "%s", command );
 }
 
@@ -4468,6 +4533,11 @@ void CL_Ping_f( void ) {
 
 	CL_SetServerInfoByAddress(pingptr->adr, NULL, 0);
 		
+// XXX xqx
+    to.keyid = xq_getkeyid();
+    Q_strncpyz(to.key, xq_getkeybyid(0, NULL), sizeof(to.key));
+// XXX -xqx
+
 	NET_OutOfBandPrint( NS_CLIENT, to, "getinfo xxx" );
 }
 
@@ -4536,6 +4606,10 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 						memcpy(&cl_pinglist[j].adr, &server[i].adr, sizeof(netadr_t));
 						cl_pinglist[j].start = Sys_Milliseconds();
 						cl_pinglist[j].time = 0;
+// XXX xqx
+						cl_pinglist[j].adr.keyid = xq_getkeyid();
+						Q_strncpyz(cl_pinglist[j].adr.key, xq_getkeybyid(0, NULL), sizeof(cl_pinglist[j].adr.key));
+// XXX -xqx
 						NET_OutOfBandPrint( NS_CLIENT, cl_pinglist[j].adr, "getinfo xxx" );
 						slots++;
 					}

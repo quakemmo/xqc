@@ -436,6 +436,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	var->modificationCount = 1;
 	var->value = atof (var->string);
 	var->integer = atoi(var->string);
+	var->int64 = S64(var->string); // XXX xqx
 	var->resetString = CopyString( var_value );
 	var->validate = qfalse;
 	var->description = NULL;

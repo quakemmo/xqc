@@ -108,11 +108,11 @@ VERSION=1.36
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=ioquake3
+CLIENTBIN=${XQ_SHORTNAME}c
 endif
 
 ifndef SERVERBIN
-SERVERBIN=ioq3ded
+SERVERBIN=${XQ_SHORTNAME}d
 endif
 
 ifndef BASEGAME
@@ -120,7 +120,7 @@ BASEGAME=baseq3
 endif
 
 ifndef BASEGAME_CFLAGS
-BASEGAME_CFLAGS=
+BASEGAME_CFLAGS=-Wno-restrict -DXQ_SHORTNAME=\"${XQ_SHORTNAME}\" -DXQ_LONGNAME=\"${XQ_LONGNAME}\" -DXQ_DOMAIN=\"${XQ_DOMAIN}\" #XXX xq removed -Wrestrict flag for now, added XQ_ vars
 endif
 
 ifndef MISSIONPACK
@@ -249,6 +249,7 @@ RCOMMONDIR=$(MOUNT_DIR)/renderercommon
 RGL1DIR=$(MOUNT_DIR)/renderergl1
 RGL2DIR=$(MOUNT_DIR)/renderergl2
 CMDIR=$(MOUNT_DIR)/qcommon
+ECMDIR=$(MOUNT_DIR)/xqcommon
 SDLDIR=$(MOUNT_DIR)/sdl
 ASMDIR=$(MOUNT_DIR)/asm
 SYSDIR=$(MOUNT_DIR)/sys
@@ -304,7 +305,7 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   OPENAL_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags openal)
   OPENAL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs openal)
   SDL_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags sdl2|sed 's/-Dmain=SDL_main//')
-  SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
+  SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2 SDL2_ttf)
 else
   # assume they're in the system default paths (no -I or -L needed)
   CURL_LIBS ?= -lcurl
@@ -597,7 +598,7 @@ ifdef MINGW
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-    -DUSE_ICON
+    -DUSE_ICON -g
 
   # In the absence of wspiapi.h, require Windows XP or later
   ifeq ($(shell test -e $(CMDIR)/wspiapi.h; echo $$?),1)
@@ -624,7 +625,7 @@ ifdef MINGW
 
   SHLIBEXT=dll
   SHLIBCFLAGS=
-  SHLIBLDFLAGS=-shared $(LDFLAGS)
+  SHLIBLDFLAGS=-shared $(LDFLAGS) -lws2_32
 
   BINEXT=.exe
 
@@ -634,7 +635,6 @@ ifdef MINGW
 
   ifeq ($(COMPILE_PLATFORM),cygwin)
     TOOLS_BINEXT=.exe
-
     # Under cygwin the default of using gcc for TOOLS_CC won't work, so
     # we need to figure out the appropriate compiler to use, based on the
     # host architecture that we're running under (as tools run on the host)
@@ -703,9 +703,11 @@ ifdef MINGW
     CLIENT_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
                       $(LIBSDIR)/win64/libSDL264.dll.a
     RENDERER_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
-                      $(LIBSDIR)/win64/libSDL264.dll.a
+                      $(LIBSDIR)/win64/libSDL2_ttf.a \
+                      $(LIBSDIR)/win64/libSDL264.dll.a \
+                      $(LIBSDIR)/win64/freetype.lib
     SDLDLL=SDL264.dll
-    CLIENT_EXTRA_FILES += $(LIBSDIR)/win64/SDL264.dll
+    CLIENT_EXTRA_FILES += $(LIBSDIR)/win64/SDL264.dll $(LIBSDIR)/win64/freetype.dll
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
@@ -1456,6 +1458,11 @@ makedirs:
 	@$(MKDIR) $(B)/tools/rcc
 	@$(MKDIR) $(B)/tools/cpp
 	@$(MKDIR) $(B)/tools/lburg
+	@$(MKDIR) $(B)/$(BASEGAME)/xqcommon
+	@$(MKDIR) $(B)/$(BASEGAME)/cgame/xq
+	@$(MKDIR) $(B)/$(BASEGAME)/cgame/xq/ui
+	@$(MKDIR) $(B)/$(BASEGAME)/cgame/xq/qwin
+	@$(MKDIR) $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes
 
 #############################################################################
 # QVM BUILD TOOLS
@@ -1599,7 +1606,7 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3LCCOBJ) $(TOOLS_LIBS)
 
 $(STRINGIFY): $(TOOLSDIR)/stringify.c
-	$(echo_cmd) "TOOLS_CC $@"
+	$(echo_cmd) "TOOLSCC $@"
 	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(TOOLSDIR)/stringify.c $(TOOLS_LIBS)
 
 define DO_Q3LCC
@@ -1686,6 +1693,7 @@ Q3OBJ = \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
   $(B)/client/cl_main.o \
+  $(B)/client/cl_xq.o \
   $(B)/client/cl_net_chan.o \
   $(B)/client/cl_parse.o \
   $(B)/client/cl_scrn.o \
@@ -1707,6 +1715,7 @@ Q3OBJ = \
   $(B)/client/msg.o \
   $(B)/client/net_chan.o \
   $(B)/client/net_ip.o \
+  $(B)/client/aes.o \
   $(B)/client/huffman.o \
   \
   $(B)/client/snd_altivec.o \
@@ -1738,6 +1747,7 @@ Q3OBJ = \
   $(B)/client/sv_world.o \
   \
   $(B)/client/q_math.o \
+  $(B)/client/xq_common.o \
   $(B)/client/q_shared.o \
   \
   $(B)/client/unzip.o \
@@ -1829,6 +1839,10 @@ Q3R2OBJ = \
   $(B)/renderergl2/tr_vbo.o \
   $(B)/renderergl2/tr_world.o \
   \
+  $(B)/renderergl2/tr_xq.o \
+  $(B)/renderergl2/tr_gl2_xq.o \
+  $(B)/renderergl2/tr_xq_gl.o \
+  \
   $(B)/renderergl1/sdl_gamma.o \
   $(B)/renderergl1/sdl_glimp.o
 
@@ -1894,18 +1908,24 @@ Q3ROBJ = \
   $(B)/renderergl1/tr_surface.o \
   $(B)/renderergl1/tr_world.o \
   \
+  $(B)/renderergl1/tr_xq.o \
+  $(B)/renderergl1/tr_gl1_xq.o \
+  $(B)/renderergl1/tr_xq_gl.o \
+  \
   $(B)/renderergl1/sdl_gamma.o \
   $(B)/renderergl1/sdl_glimp.o
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3ROBJ += \
     $(B)/renderergl1/q_shared.o \
+    $(B)/renderergl1/xq_common.o \
     $(B)/renderergl1/puff.o \
     $(B)/renderergl1/q_math.o \
     $(B)/renderergl1/tr_subs.o
 
   Q3R2OBJ += \
     $(B)/renderergl1/q_shared.o \
+    $(B)/renderergl1/xq_common.o \
     $(B)/renderergl1/puff.o \
     $(B)/renderergl1/q_math.o \
     $(B)/renderergl1/tr_subs.o
@@ -2271,10 +2291,12 @@ Q3DOBJ = \
   $(B)/ded/msg.o \
   $(B)/ded/net_chan.o \
   $(B)/ded/net_ip.o \
+  $(B)/ded/aes.o \
   $(B)/ded/huffman.o \
   \
   $(B)/ded/q_math.o \
   $(B)/ded/q_shared.o \
+  $(B)/ded/xq_common.o \
   \
   $(B)/ded/unzip.o \
   $(B)/ded/ioapi.o \
@@ -2407,6 +2429,56 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
+  $(B)/$(BASEGAME)/cgame/xq/util.o \
+  $(B)/$(BASEGAME)/cgame/xq/frame.o \
+  $(B)/$(BASEGAME)/cgame/xq/drawbbox.o \
+  $(B)/$(BASEGAME)/cgame/xq/info.o \
+  $(B)/$(BASEGAME)/cgame/xq/particles.o \
+  $(B)/$(BASEGAME)/cgame/xq/ping.o \
+  $(B)/$(BASEGAME)/cgame/xq/nameplate.o \
+  $(B)/$(BASEGAME)/cgame/xq/localcmd.o \
+  $(B)/$(BASEGAME)/cgame/xq/key.o \
+  $(B)/$(BASEGAME)/cgame/xq/mouse.o \
+  $(B)/$(BASEGAME)/cgame/xq/target.o \
+  $(B)/$(BASEGAME)/cgame/xq/init.o \
+  $(B)/$(BASEGAME)/cgame/xq/item.o \
+  $(B)/$(BASEGAME)/cgame/xq/log.o \
+  $(B)/$(BASEGAME)/cgame/xq/srvcmd.o \
+  $(B)/$(BASEGAME)/cgame/xq/spell.o \
+  $(B)/$(BASEGAME)/cgame/xq/3d.o \
+  $(B)/$(BASEGAME)/cgame/xq/cJSON.o \
+  $(B)/$(BASEGAME)/cgame/xq/npc.o \
+  $(B)/$(BASEGAME)/cgame/xq/debdisp.o \
+  $(B)/$(BASEGAME)/cgame/xq/camera.o \
+  $(B)/$(BASEGAME)/cgame/xq/getname.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/engine.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/frame.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/util.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/window.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/object.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/prompt.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/money.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/amountpicker.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/iteminspector.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/invslot.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/itemgfx.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/timebar.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/percbar.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/button.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/text.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/tooltip.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/spellbookslot.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/spellicon.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/spellgem.o \
+  $(B)/$(BASEGAME)/cgame/xq/qwin/objtypes/autoequip.o \
+  $(B)/$(BASEGAME)/cgame/xq/ui/ui.o \
+  $(B)/$(BASEGAME)/cgame/xq/ui/setvals.o \
+  $(B)/$(BASEGAME)/cgame/xq/ui/var2win.o \
+  $(B)/$(BASEGAME)/cgame/xq/chat.o \
+  $(B)/$(BASEGAME)/cgame/xq/scoreboard.o \
+  $(B)/$(BASEGAME)/cgame/xq/animodel.o \
+  $(B)/$(BASEGAME)/xqcommon/xq_common.o \
+  \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
@@ -2415,7 +2487,7 @@ Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
 $(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(Q3CGOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2505,6 +2577,8 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_utils.o \
   $(B)/$(BASEGAME)/game/g_weapon.o \
   \
+  $(B)/$(BASEGAME)/xqcommon/xq_common.o \
+  \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
@@ -2577,6 +2651,7 @@ $(B)/$(MISSIONPACK)/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 #############################################################################
 
 Q3UIOBJ_ = \
+  $(B)/$(BASEGAME)/ui/ui_xq_charsel.o \
   $(B)/$(BASEGAME)/ui/ui_main.o \
   $(B)/$(BASEGAME)/ui/bg_misc.o \
   $(B)/$(BASEGAME)/ui/bg_lib.o \
@@ -2586,29 +2661,29 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_cinematics.o \
   $(B)/$(BASEGAME)/ui/ui_confirm.o \
   $(B)/$(BASEGAME)/ui/ui_connect.o \
-  $(B)/$(BASEGAME)/ui/ui_controls2.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_controls.o \
   $(B)/$(BASEGAME)/ui/ui_credits.o \
   $(B)/$(BASEGAME)/ui/ui_demo2.o \
-  $(B)/$(BASEGAME)/ui/ui_display.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_display.o \
   $(B)/$(BASEGAME)/ui/ui_gameinfo.o \
-  $(B)/$(BASEGAME)/ui/ui_ingame.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_ingame.o \
   $(B)/$(BASEGAME)/ui/ui_loadconfig.o \
-  $(B)/$(BASEGAME)/ui/ui_menu.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_menu.o \
   $(B)/$(BASEGAME)/ui/ui_mfield.o \
   $(B)/$(BASEGAME)/ui/ui_mods.o \
-  $(B)/$(BASEGAME)/ui/ui_network.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_network.o \
   $(B)/$(BASEGAME)/ui/ui_options.o \
   $(B)/$(BASEGAME)/ui/ui_playermodel.o \
   $(B)/$(BASEGAME)/ui/ui_players.o \
   $(B)/$(BASEGAME)/ui/ui_playersettings.o \
-  $(B)/$(BASEGAME)/ui/ui_preferences.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_preferences.o \
   $(B)/$(BASEGAME)/ui/ui_qmenu.o \
   $(B)/$(BASEGAME)/ui/ui_removebots.o \
   $(B)/$(BASEGAME)/ui/ui_saveconfig.o \
   $(B)/$(BASEGAME)/ui/ui_serverinfo.o \
   $(B)/$(BASEGAME)/ui/ui_servers2.o \
-  $(B)/$(BASEGAME)/ui/ui_setup.o \
-  $(B)/$(BASEGAME)/ui/ui_sound.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_setup.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_sound.o \
   $(B)/$(BASEGAME)/ui/ui_sparena.o \
   $(B)/$(BASEGAME)/ui/ui_specifyserver.o \
   $(B)/$(BASEGAME)/ui/ui_splevel.o \
@@ -2617,9 +2692,10 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_startserver.o \
   $(B)/$(BASEGAME)/ui/ui_team.o \
   $(B)/$(BASEGAME)/ui/ui_teamorders.o \
-  $(B)/$(BASEGAME)/ui/ui_video.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_video.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
+  $(B)/$(BASEGAME)/xqcommon/xq_common.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
 Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
@@ -2686,6 +2762,9 @@ $(B)/client/%.o: $(SDIR)/%.c
 $(B)/client/%.o: $(CMDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/%.o: $(ECMDIR)/%.c
+	$(DO_CC)
+
 $(B)/client/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
 
@@ -2729,6 +2808,9 @@ $(B)/client/win_resource.o: $(SYSDIR)/win_resource.rc $(SYSDIR)/win_manifest.xml
 $(B)/renderergl1/%.o: $(CMDIR)/%.c
 	$(DO_REF_CC)
 
+$(B)/renderergl1/%.o: $(ECMDIR)/%.c
+	$(DO_REF_CC)
+
 $(B)/renderergl1/%.o: $(SDLDIR)/%.c
 	$(DO_REF_CC)
 
@@ -2768,6 +2850,9 @@ $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
+	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(ECMDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(ZDIR)/%.c
@@ -2864,6 +2949,9 @@ $(B)/$(MISSIONPACK)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 
 
 $(B)/$(BASEGAME)/qcommon/%.o: $(CMDIR)/%.c
+	$(DO_SHLIB_CC)
+
+$(B)/$(BASEGAME)/xqcommon/%.o: $(ECMDIR)/%.c
 	$(DO_SHLIB_CC)
 
 $(B)/$(BASEGAME)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)

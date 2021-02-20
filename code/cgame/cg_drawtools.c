@@ -59,6 +59,166 @@ void CG_FillRect( float x, float y, float width, float height, const float *colo
 
 	trap_R_SetColor( NULL );
 }
+// XXX xqx
+void xq_FillRect(float x, float y, float width, float height, const float *color) {
+	trap_R_SetColor(color);
+	trap_R_DrawStretchPic(x, y, width, height, 0, 0, 0, 0, cgs.media.whiteShader);
+	trap_R_SetColor(NULL);
+}
+void xq_FillRect_Gradient( float x, float y, float width, float height, const float *color1, const float *color2, int mirror) {
+	vec4_t col;
+	col[3] = color1[3];
+
+	for (int i = 1;  i <= (mirror ? height / 2 : height);  i++) {
+		float mul = (i / (mirror ? height / 2 : height));
+		col[0] = color1[0] + ((color2[0] - color1[0]) * mul);
+		col[1] = color1[1] + ((color2[1] - color1[1]) * mul);
+		col[2] = color1[2] + ((color2[2] - color1[2]) * mul);
+		trap_R_SetColor(col);
+		trap_R_DrawStretchPic(x, y+(i-1), width, 1, 0, 0, 0, 0, cgs.media.whiteShader);
+		trap_R_SetColor(NULL);
+	}
+	if (mirror) {
+		for (int i = 1;  i <= (height / 2);  i++) {
+			float mul = ((height / 2 - (i-1)) / (height / 2));
+			col[0] = color1[0] + ((color2[0] - color1[0]) * mul);
+			col[1] = color1[1] + ((color2[1] - color1[1]) * mul);
+			col[2] = color1[2] + ((color2[2] - color1[2]) * mul);
+			trap_R_SetColor(col);
+			trap_R_DrawStretchPic(x, y+(i-1)+height/2, width, 1, 0, 0, 0, 0, cgs.media.whiteShader);
+			trap_R_SetColor(NULL);
+		}
+	}
+}
+void xq_DrawSides(float x, float y, float w, float h, float size) {
+	trap_R_DrawStretchPic(x, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader);
+	trap_R_DrawStretchPic(x + w - size, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader);
+}
+void xq_DrawRect(float x, float y, float width, float height, float size, const float *color) {
+	trap_R_SetColor(color);
+
+	xq_DrawTopBottom(x, y, width, height, size);
+	xq_DrawSides(x, y, width, height, size);
+
+	trap_R_SetColor(NULL);
+}
+void xq_DrawTopBottom(float x, float y, float w, float h, float size) {
+	trap_R_DrawStretchPic(x, y, w, size, 0, 0, 0, 0, cgs.media.whiteShader);
+	trap_R_DrawStretchPic(x, y + h - size, w, size, 0, 0, 0, 0, cgs.media.whiteShader);
+}
+int xq_DrawStringExt(qw_window_t *win, int x, int y, const char *string, const float *setColor, qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars ) {
+	vec4_t		color;
+	const char	*s;
+	int			xx;
+	int			cnt;
+	int			cr_num = 0;
+
+	if (maxChars <= 0)
+		maxChars = 32767; // do them all!
+
+	// draw the drop shadow
+	if (shadow) {
+		color[0] = color[1] = color[2] = 0;
+		color[3] = setColor[3];
+		trap_R_SetColor( color );
+		s = string;
+		xx = x;
+		cnt = 0;
+		while ( *s && cnt < maxChars) {
+			if ( Q_IsColorString( s ) ) {
+				s += 2;
+				continue;
+			}
+			xq_DrawChar( xx + 2, y + 2, charWidth, charHeight, *s );
+			cnt++;
+			xx += charWidth;
+			s++;
+		}
+	}
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	cnt = 0;
+	trap_R_SetColor( setColor );
+	while ( *s && cnt < maxChars) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				trap_R_SetColor( color );
+			}
+			s += 2;
+			continue;
+		}
+
+		// If drawing next char violates window boundaries (or we have a CR in the text), add a newline
+		if (
+			(win && xx - win->x > (win->w - QW_WIN_BORDER_WIDTH*2 - 5)) ||
+			(*s == '\n')
+		) {
+			xx = x;
+			y += charHeight;
+			cr_num++;
+			if (*s == '\n') {
+				s++;
+			}
+		}
+
+
+		xq_DrawChar(xx, y, charWidth, charHeight, *s);
+		xx += charWidth;
+		cnt++;
+		s++;
+	}
+	trap_R_SetColor(NULL);
+	return cr_num;
+}
+void xq_DrawChar(int x, int y, int width, int height, int ch) {
+	int		row, col;
+	float	frow, fcol;
+	float	size;
+	float	ax, ay, aw, ah;
+
+	ch &= 255;
+
+	if ( ch == ' ' ) {
+		return;
+	}
+
+	ax = x;
+	ay = y;
+	aw = width;
+	ah = height;
+
+	row = ch>>4;
+	col = ch&15;
+
+	frow = row*0.0625;
+	fcol = col*0.0625;
+	size = 0.0625;
+
+	trap_R_DrawStretchPic(
+		ax, ay, aw, ah,
+		fcol, frow,
+		fcol + size, frow + size,
+		cgs.media.charsetShader
+	);
+}
+int CG_DrawTinyString(qw_window_t *win, int x, int y, const char *s, float alpha) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	return xq_DrawStringExt(win, x, y, s, color, qfalse, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0);
+}
+void CG_DrawTinyStringColor(int x, int y, const char *s, vec5_t color) {
+	xq_DrawStringExt(NULL, x, y, s, color, qtrue, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0);
+}
+void xq_DrawPic(float x, float y, float width, float height, qhandle_t hShader) {
+	trap_R_DrawStretchPic(x, y, width, height, 0, 0, 1, 1, hShader);
+}
+// XXX -xqx
 
 /*
 ================
@@ -91,6 +251,7 @@ void CG_DrawRect( float x, float y, float width, float height, float size, const
 	trap_R_SetColor( color );
 
   CG_DrawTopBottom(x, y, width, height, size);
+  CG_DrawSides(x, y, width, height, size);
   CG_DrawSides(x, y + size, width, height - size * 2, size);
 
 	trap_R_SetColor( NULL );
@@ -161,8 +322,8 @@ to a fixed color.
 Coordinates are at 640 by 480 virtual resolution
 ==================
 */
-void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
-		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars ) {
+void CG_DrawStringExt(qw_window_t *win, int x, int y, const char *string, const float *setColor, // XXX xqx added win as 1st param
+		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars) {
 	vec4_t		color;
 	const char	*s;
 	int			xx;
@@ -219,11 +380,11 @@ void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
 
 	color[0] = color[1] = color[2] = 1.0;
 	color[3] = alpha;
-	CG_DrawStringExt( x, y, s, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0 );
+	CG_DrawStringExt(NULL, x, y, s, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0); // XXX xqx added NULL as 1st param
 }
 
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color ) {
-	CG_DrawStringExt( x, y, s, color, qtrue, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0 );
+	CG_DrawStringExt(NULL, x, y, s, color, qtrue, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0); // XXX xqx added NULL as 1st param
 }
 
 void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
@@ -231,11 +392,11 @@ void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
 
 	color[0] = color[1] = color[2] = 1.0;
 	color[3] = alpha;
-	CG_DrawStringExt( x, y, s, color, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+	CG_DrawStringExt(NULL, x, y, s, color, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0); // XXX xqx added NULL as 1st param
 }
 
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
-	CG_DrawStringExt( x, y, s, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+	CG_DrawStringExt(NULL, x, y, s, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0); // XXX xqx added NULL as 1st param
 }
 
 /*

@@ -376,6 +376,7 @@ static void S_AL_BufferLoad(sfxHandle_t sfx, qboolean cache)
 	data = S_CodecLoad(curSfx->filename, &info);
 	if(!data)
 	{
+		Com_Printf("[XQLOG]S_AL_BufferLoad() ERROR: Can't open sound file %s\n", curSfx->filename);
 		S_AL_BufferUseDefault(sfx);
 		return;
 	}

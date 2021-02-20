@@ -158,6 +158,9 @@ cvar_t	*r_debugLight;
 cvar_t	*r_debugSort;
 cvar_t	*r_printShaders;
 cvar_t	*r_saveFontData;
+// XXX xqx
+cvar_t	*r_xqdebugTShader;
+// XXX -xqx
 
 cvar_t	*r_marksOnTriangleMeshes;
 
@@ -692,6 +695,13 @@ void R_ScreenShot_f (void) {
 		ri.Printf (PRINT_ALL, "Wrote %s\n", checkname);
 	}
 } 
+// XXX xqx
+void R_ScreenShotZoning_f(void) {
+	// Take a screenshot and write it to a temp file so we can display it during zoning
+	// (but not during the initial zoning upon log in).
+	R_TakeScreenshot(0, 0, glConfig.vidWidth, glConfig.vidHeight, "screenshots/zoning.jpg", qtrue);
+}
+// XXX -xqx
 
 void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
@@ -1107,6 +1117,9 @@ void R_Register( void )
 	r_debugSort = ri.Cvar_Get( "r_debugSort", "0", CVAR_CHEAT );
 	r_printShaders = ri.Cvar_Get( "r_printShaders", "0", 0 );
 	r_saveFontData = ri.Cvar_Get( "r_saveFontData", "0", 0 );
+// XXX xqx
+	r_xqdebugTShader = ri.Cvar_Get("r_xqdebugTShader", "0", CVAR_TEMP);
+// XXX -xqx
 
 	r_nocurves = ri.Cvar_Get ("r_nocurves", "0", CVAR_CHEAT );
 	r_drawworld = ri.Cvar_Get ("r_drawworld", "1", CVAR_CHEAT );
@@ -1159,6 +1172,9 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "modellist", R_Modellist_f );
 	ri.Cmd_AddCommand( "modelist", R_ModeList_f );
 	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
+// XXX xqx
+	ri.Cmd_AddCommand( "screenshotzoning", R_ScreenShotZoning_f );
+// XXX -xqx
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShotJPEG_f );
 	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 	ri.Cmd_AddCommand( "minimize", GLimp_Minimize );
@@ -1181,8 +1197,8 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != 11332)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 11332", (unsigned int) sizeof(glconfig_t));
+	if(sizeof(glconfig_t) != 20548) // XXX xqx changed 11332 to 20548 to account for increased MAX_STRING_CHARS and friends
+		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 20548", (unsigned int) sizeof(glconfig_t)); // XXX same here
 
 //	Swap_Init();
 
@@ -1301,6 +1317,9 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	}
 
 	tr.registered = qfalse;
+	// XXX xqx
+	RE_XQ_ClearTShaderCache();
+	// XXX -xqx
 }
 
 
@@ -1350,6 +1369,10 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
 	re.RegisterSkin = RE_RegisterSkin;
+	// XXX xqx
+	re.XQ_TShader = RE_XQ_TShader;
+	re.XQ_ScreenShotZoning = R_ScreenShotZoning_f;
+	// XXX -xqx
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
 	re.LoadWorld = RE_LoadWorldMap;

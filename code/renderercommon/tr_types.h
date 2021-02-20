@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	MAX_DLIGHTS		32		// can't be increased, because bit flags are used on surfaces
 
-#define	REFENTITYNUM_BITS	10		// can't be increased without changing drawsurf bit packing
+#define	REFENTITYNUM_BITS	11		// can't be increased without changing drawsurf bit packing // XXX xqx changed 10 to 11 - not sure it's a good idea.
 #define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
 // the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,
 //  and this is reflected by the value of MAX_REFENTITIES (which therefore is not a power-of-2)
@@ -75,6 +75,9 @@ typedef enum {
 	RT_MODEL,
 	RT_POLY,
 	RT_SPRITE,
+// XXX xqx
+	RT_XQNAME,
+// XXX -xqx
 	RT_BEAM,
 	RT_RAIL_CORE,
 	RT_RAIL_RINGS,
@@ -108,6 +111,29 @@ typedef struct {
 	int			skinNum;			// inline skin index
 	qhandle_t	customSkin;			// NULL for default skin
 	qhandle_t	customShader;		// use one image for the entire thing
+// XXX xqx
+	int			customTint;
+	int			feetTint;
+	int			armsTint;
+	int			leftwristTint;
+	int			rightwristTint;
+	int			handsTint;
+
+	// These are used in Arena to color people green.
+	// We still apply armor texture but no longer apply any armor tint other than the Arena emphasize shader
+	int			skipTint;
+	int			skipFeetTint;
+	int			skipArmsTint;
+	int			skipLeftwristTint;
+	int			skipRightwristTint;
+	int			skipHandsTint;
+
+	qhandle_t	feetShader;
+	qhandle_t	armsShader;
+	qhandle_t	leftwristShader;
+	qhandle_t	rightwristShader;
+	qhandle_t	handsShader;
+// XXX -xqx
 
 	// misc
 	byte		shaderRGBA[4];		// colors used by rgbgen entity shaders

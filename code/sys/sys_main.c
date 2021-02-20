@@ -30,6 +30,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+// XXX xqx temp fix for gdb hang
+#ifdef XQ_UNIX
+	#include <fcntl.h>
+	#include <unistd.h>
+#endif
+// -XXX xqx
 
 #ifndef DEDICATED
 #ifdef USE_LOCAL_HEADERS
@@ -616,6 +622,9 @@ void *Sys_LoadGameDll(const char *name,
 	Com_Printf ( "Sys_LoadGameDll(%s) found vmMain function at %p\n", name, *entryPoint );
 	dllEntry( systemcalls );
 
+#ifdef XQ_UNIX
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK ); // XXX xqx temp fix for GDB hang
+#endif
 	return libHandle;
 }
 
@@ -691,8 +700,11 @@ int main( int argc, char **argv )
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
 
+/*
+	XXX xqx commented out
 	extern void Sys_LaunchAutoupdater(int argc, char **argv);
 	Sys_LaunchAutoupdater(argc, argv);
+*/
 
 #ifndef DEDICATED
 	// SDL version check
@@ -755,10 +767,13 @@ int main( int argc, char **argv )
 	CON_Init( );
 	Com_Init( commandLine );
 	NET_Init( );
+#ifdef XQ_UNIX
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK ); // XXX xqx temp fix for GDB hang
+#endif
 
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
-	signal( SIGSEGV, Sys_SigHandler );
+	//signal( SIGSEGV, Sys_SigHandler ); // XXX xqx commented out so we get coredumps
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 

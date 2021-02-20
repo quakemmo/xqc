@@ -83,9 +83,44 @@ static void CG_Viewpos_f (void) {
 		(int)cg.refdefViewAngles[YAW]);
 }
 
+// XXX xqx
+static void CG_CameraCycle_f(void) {
+	xq_camera_CycleView(qfalse);
+}
+static void CG_Mousemode_f (void) {
+	// Switches between FPS and mouse mode. Mouse mode cannot be
+	// left if we're looting anything.
+	// Leaving mouse mode closes inventory, spellbook, skills window and amount picker.
+	char buff[10];
+	trap_Cvar_VariableStringBuffer("cl_xq_mousemode", buff, sizeof(buff));
+	if (buff[0] == 48) {
+		if (!(cg.snap->ps.xq_flags & XQ_LOOTING_PC) && !(cg.snap->ps.xq_flags & XQ_LOOTING_NPC)) {
+			buff[0] = 49;
+			CG_ZoomUp_f();
+			trap_XQ_ClearKeys();
+		}
+	} else {
+		if (!(cg.snap->ps.xq_flags & XQ_LOOTING_PC) && !(cg.snap->ps.xq_flags & XQ_LOOTING_NPC)) {
+			buff[0] = 48;
+			xqui_Inventory(0);
+			if (qws->spellbook_page > 0) {
+				xq_scmd("/spellbookpage 0");
+			}
+			qw_Obj_AmountPicker_Reset();
+			qw_WindowDelete("skills");
+			trap_XQ_ClearKeys();
+		}
+	}
+	trap_XQ_Mouselook(0);
+	buff[1] = 0;
+	trap_Cvar_Set("cl_xq_mousemode", buff);
+}
+// XXX -xqx
 
 static void CG_ScoresDown_f( void ) {
 
+/*
+// XXX xqx redone
 #ifdef MISSIONPACK
 		CG_BuildSpectatorString();
 #endif
@@ -106,6 +141,8 @@ static void CG_ScoresDown_f( void ) {
 		// is within two seconds
 		cg.showScores = qtrue;
 	}
+*/
+	cg.showScores = qtrue;
 }
 
 static void CG_ScoresUp_f( void ) {
@@ -458,6 +495,27 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin", CG_TestModelNextSkin_f },
 	{ "prevskin", CG_TestModelPrevSkin_f },
 	{ "viewpos", CG_Viewpos_f },
+// XXX xqx
+	{ "mousemode", CG_Mousemode_f },
+	{ "cameracycle", CG_CameraCycle_f },
+	{ "bags", xqui_Bags },
+	{ "spellbook", xqui_SpellBook_Toggle },
+	{ "inventory", xqui_Inventory_Toggle },
+	{ "consider", xq_Consider },
+	{ "skills", xqui_Skills },
+	{ "sit", xq_Sit },
+	{ "hail", xq_Hail },
+	{ "+tooltips", xqui_Tooltips_On },
+	{ "-tooltips", xqui_Tooltips_Off },
+	{ "target_self", xq_Target_Self },
+	{ "target_group2", xq_Target_Group2 },
+	{ "target_group3", xq_Target_Group3 },
+	{ "target_group4", xq_Target_Group4 },
+	{ "target_group5", xq_Target_Group5 },
+	{ "target_group6", xq_Target_Group6 },
+	{ "xqzoomin", xq_Camera_ZoomIn },
+	{ "xqzoomout", xq_Camera_ZoomOut },
+// XXX -xqx
 	{ "+scores", CG_ScoresDown_f },
 	{ "-scores", CG_ScoresUp_f },
 	{ "+zoom", CG_ZoomDown_f },
@@ -548,7 +606,7 @@ void CG_InitConsoleCommands( void ) {
 	// the game server will interpret these commands, which will be automatically
 	// forwarded to the server after they are not recognized locally
 	//
-	trap_AddCommand ("kill");
+//	trap_AddCommand ("kill");
 	trap_AddCommand ("say");
 	trap_AddCommand ("say_team");
 	trap_AddCommand ("tell");
@@ -580,4 +638,8 @@ void CG_InitConsoleCommands( void ) {
 	trap_AddCommand ("stats");
 	trap_AddCommand ("teamtask");
 	trap_AddCommand ("loaddefered");	// spelled wrong, but not changing for demo
+// XXX xqx
+	trap_AddCommand ("xqtest");
+	trap_AddCommand ("xqdev1");
+// XXX -xqx
 }

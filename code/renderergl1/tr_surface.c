@@ -1054,6 +1054,11 @@ Entities that have a single procedurally generated surface
 */
 static void RB_SurfaceEntity( surfaceType_t *surfType ) {
 	switch( backEnd.currentEntity->e.reType ) {
+// XXX xqx
+	case RT_XQNAME:
+		RB_XQName();
+		break;
+// XXX -xqx
 	case RT_SPRITE:
 		RB_SurfaceSprite();
 		break;

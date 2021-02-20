@@ -220,7 +220,7 @@ typedef struct {
         char			pakPathname[MAX_OSPATH];	// c:\quake3\baseq3
 	char			pakFilename[MAX_OSPATH];	// c:\quake3\baseq3\pak0.pk3
 	char			pakBasename[MAX_OSPATH];	// pak0
-	char			pakGamename[MAX_OSPATH];	// baseq3
+	char			pxqxamename[MAX_OSPATH];	// baseq3
 	unzFile			handle;						// handle to zip file
 	int				checksum;					// regular checksum
 	int				pure_checksum;				// checksum for pure
@@ -2977,7 +2977,7 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 			Q_strncpyz(pak->pakPathname, curpath, sizeof(pak->pakPathname));
 			// store the game name for downloading
-			Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
+			Q_strncpyz(pak->pxqxamename, dir, sizeof(pak->pxqxamename));
 
 			fs_packFiles += pak->numfiles;
 
@@ -3473,14 +3473,14 @@ static void FS_CheckPak0( void )
 		curpack = path->pack;
 		pakBasename = curpack->pakBasename;
 
-		if(!Q_stricmpn( curpack->pakGamename, "demoq3", MAX_OSPATH )
+		if(!Q_stricmpn( curpack->pxqxamename, "demoq3", MAX_OSPATH )
 				&& !Q_stricmpn( pakBasename, "pak0", MAX_OSPATH ))
 		{
 			if(curpack->checksum == DEMO_PAK0_CHECKSUM)
 				founddemo = qtrue;
 		}
 
-		else if(!Q_stricmpn( curpack->pakGamename, BASEGAME, MAX_OSPATH )
+		else if(!Q_stricmpn( curpack->pxqxamename, BASEGAME, MAX_OSPATH )
 				&& strlen(pakBasename) == 4 && !Q_stricmpn( pakBasename, "pak", 3 )
 				&& pakBasename[3] >= '0' && pakBasename[3] <= '0' + NUM_ID_PAKS - 1)
 		{
@@ -3509,7 +3509,7 @@ static void FS_CheckPak0( void )
 
 			foundPak |= 1<<(pakBasename[3]-'0');
 		}
-		else if(!Q_stricmpn(curpack->pakGamename, BASETA, MAX_OSPATH)
+		else if(!Q_stricmpn(curpack->pxqxamename, BASETA, MAX_OSPATH)
 				&& strlen(pakBasename) == 4 && !Q_stricmpn(pakBasename, "pak", 3)
 				&& pakBasename[3] >= '0' && pakBasename[3] <= '0' + NUM_TA_PAKS - 1)
 
@@ -3743,7 +3743,7 @@ const char *FS_ReferencedPakChecksums( void ) {
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
 		if ( search->pack ) {
-			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {
+			if (search->pack->referenced || Q_stricmpn(search->pack->pxqxamename, com_basegame->string, strlen(com_basegame->string))) {
 				Q_strcat( info, sizeof( info ), va("%i ", search->pack->checksum ) );
 			}
 		}
@@ -3818,11 +3818,11 @@ const char *FS_ReferencedPakNames( void ) {
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
 		if ( search->pack ) {
-			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {
+			if (search->pack->referenced || Q_stricmpn(search->pack->pxqxamename, com_basegame->string, strlen(com_basegame->string))) {
 				if (*info) {
 					Q_strcat(info, sizeof( info ), " " );
 				}
-				Q_strcat( info, sizeof( info ), search->pack->pakGamename );
+				Q_strcat( info, sizeof( info ), search->pack->pxqxamename );
 				Q_strcat( info, sizeof( info ), "/" );
 				Q_strcat( info, sizeof( info ), search->pack->pakBasename );
 			}

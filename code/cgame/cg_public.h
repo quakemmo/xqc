@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // needs to be larger than PACKET_BACKUP
 
 
-#define	MAX_ENTITIES_IN_SNAPSHOT	256
+#define	MAX_ENTITIES_IN_SNAPSHOT	2048 // XXX xqx changed from 256 to 2048
 
 // snapshots are a view of the server at a given time
 
@@ -182,7 +182,21 @@ typedef enum {
 	CG_CEIL,
 	CG_TESTPRINTINT,
 	CG_TESTPRINTFLOAT,
-	CG_ACOS
+	CG_ACOS,
+// XXX xqx
+	CG_R_XQ_TSHADER,
+	CG_R_XQ_SCREENSHOTZONING,
+	CG_XQ_CON_NOTIFY,
+	CG_XQ_ENCRYPT,
+	CG_XQ_DECRYPT,
+	CG_XQ_CRYPTOPAD,
+	CG_XQ_PERS_GET_I64,
+	CG_XQ_PERS_SET_I64,
+	CG_XQ_GET_KEYS,
+	CG_XQ_MOUSELOOK,
+	CG_XQ_CLEARKEYS,
+	CG_XQ_GETITEMFROMQUEUE,
+// XXX -xqx
 } cgameImport_t;
 
 
@@ -193,6 +207,17 @@ functions exported to the main executable
 
 ==================================================================
 */
+// XXX xqx
+// character width and height for chat chat window
+#define XQ_CHAT_WIDTH 9
+#define XQ_CHAT_HEIGHT 12
+#define XQ_CMDCOOKIES_MAX 10
+typedef struct xq_cmdCookie_s {
+    int cookie;
+    int ts;
+} xq_cmdCookie_t;
+
+// XXX -xqx
 
 typedef enum {
 	CG_INIT,
@@ -231,8 +256,20 @@ typedef enum {
 
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int dx, int dy );
-	CG_EVENT_HANDLING
+	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(int type);
+// XXX xqx
+	CG_XQ_MOUSEMOVE,
+	CG_XQ_KEYEVENT,
+	CG_XQ_LOCALCMD,
+	CG_XQ_ITEMINFO,
+	CG_XQ_ITEMINFO_ASK,
+	CG_XQ_SPELLINFO,
+	CG_XQ_SPELLINFO_ASK,
+	CG_XQ_INFOINFO,
+	CG_XQ_INFOINFO_ASK,
+	CG_XQ_DEINIT
+// XXX -xqx
 } cgameExport_t;
 
 //----------------------------------------------

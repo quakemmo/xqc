@@ -545,7 +545,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
   	
       CG_Draw3DModel( rect->x, rect->y, rect->w, rect->h, ci->headModel, ci->headSkin, origin, angles );
   	} else if ( cg_drawIcons.integer ) {
-	  	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, ci->modelIcon );
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, ci->modelIcon );
   	}
 
   	// if they are deferred, draw a cross out

@@ -189,6 +189,7 @@ char *Sys_GetCurrentUser( void )
 	if ( (p = getpwuid( getuid() )) == NULL ) {
 		return "player";
 	}
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK ); // XXX xqx temp fix for GDB hang
 	return p->pw_name;
 }
 

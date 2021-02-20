@@ -22,8 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_LOCAL_HEADERS
 #	include "SDL.h"
+#	include "SDL_syswm.h" // XXX xqx added
 #else
 #	include <SDL.h>
+#	include <SDL_syswm.h> // XXX xqx added
 #endif
 
 #include <stdarg.h>
@@ -744,6 +746,44 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	glstring = (char *) qglGetString (GL_RENDERER);
 	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glstring );
 
+// XXX xqx
+	SDL_version compiled;
+	SDL_version linked;
+	SDL_VERSION(&compiled);
+	SDL_GetVersion(&linked);
+	ri.Printf(PRINT_ALL, "We compiled against SDL version %d.%d.%d ...\n",
+		compiled.major, compiled.minor, compiled.patch);
+	ri.Printf(PRINT_ALL, "We are linked against SDL version %d.%d.%d.\n",
+		linked.major, linked.minor, linked.patch);
+
+
+#ifdef _WIN32
+
+	int wine = 0;
+	static const char *(CDECL *pwine_get_version)(void);
+    HMODULE hntdll = GetModuleHandle("ntdll.dll");
+	if (hntdll) {
+		pwine_get_version = (void *)GetProcAddress(hntdll, "wine_get_version");
+		if (pwine_get_version) {
+			wine = 1;
+		}
+	}
+	if (!wine) {
+
+		// Try our best to bring the window to the top
+		SDL_SysWMinfo wmInfo;
+		SDL_VERSION(&wmInfo.version);
+		SDL_GetWindowWMInfo(SDL_window, &wmInfo);
+		HWND hwnd = wmInfo.info.win.window;
+		ri.Printf(PRINT_ALL, "SetWindowPos(): %d\n",
+			SetWindowPos(hwnd, HWND_TOPMOST, 10, 10, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE));
+		ri.Printf(PRINT_ALL, "BringWindowToTop(): %d\n", BringWindowToTop(hwnd));
+		ri.Printf(PRINT_ALL, "SetForegroundWindow(): %d\n", SetForegroundWindow(hwnd));
+		SwitchToThisWindow(hwnd, FALSE);
+	}
+#endif
+// XXX -xqx
+
 	return RSERR_OK;
 }
 
@@ -990,7 +1030,7 @@ of OpenGL
 */
 void GLimp_Init( qboolean fixedFunction )
 {
-	ri.Printf( PRINT_DEVELOPER, "Glimp_Init( )\n" );
+	ri.Printf( PRINT_DEVELOPER_WHITE, "Glimp_Init( )\n" ); // XXX xqx added _WHITE
 
 	r_allowSoftwareGL = ri.Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
 	r_sdlDriver = ri.Cvar_Get( "r_sdlDriver", "", CVAR_ROM );

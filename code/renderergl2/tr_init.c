@@ -224,6 +224,9 @@ cvar_t	*r_debugLight;
 cvar_t	*r_debugSort;
 cvar_t	*r_printShaders;
 cvar_t	*r_saveFontData;
+// XXX xqx
+cvar_t	*r_xqdebugTShader;
+// XXX -xqx
 
 cvar_t	*r_marksOnTriangleMeshes;
 
@@ -1328,6 +1331,9 @@ void R_Register( void )
 	r_debugSort = ri.Cvar_Get( "r_debugSort", "0", CVAR_CHEAT );
 	r_printShaders = ri.Cvar_Get( "r_printShaders", "0", 0 );
 	r_saveFontData = ri.Cvar_Get( "r_saveFontData", "0", 0 );
+// XXX xqx
+	r_xqdebugTShader = ri.Cvar_Get("r_xqdebugTShader", "0", CVAR_TEMP);
+// XXX -xqx
 
 	r_nocurves = ri.Cvar_Get ("r_nocurves", "0", CVAR_CHEAT );
 	r_drawworld = ri.Cvar_Get ("r_drawworld", "1", CVAR_CHEAT );
@@ -1422,8 +1428,8 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != 11332)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 11332", (unsigned int) sizeof(glconfig_t));
+	if(sizeof(glconfig_t) != 20548) // XXX xqx changed 11332 to 20548
+		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 20548", (unsigned int) sizeof(glconfig_t)); // XXX xqx same
 
 //	Swap_Init();
 
@@ -1559,6 +1565,9 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	}
 
 	tr.registered = qfalse;
+	// XXX xqx
+	RE_XQ_ClearTShaderCache();
+	// XXX -xqx
 }
 
 
@@ -1608,6 +1617,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
 	re.RegisterSkin = RE_RegisterSkin;
+// XXX xqx
+	re.XQ_TShader = RE_XQ_TShader;
+// XXX -xqx
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
 	re.LoadWorld = RE_LoadWorldMap;

@@ -573,7 +573,7 @@ static qboolean KeyToAxisAndSign(int keynum, int *outAxis, int *outSign)
 	if (!keynum)
 		return qfalse;
 
-	bind = Key_GetBinding(keynum);
+	bind = cl_xq_mousemode->integer ? MM_Key_GetBinding(keynum) : Key_GetBinding(keynum); // XXX xqx
 
 	if (!bind || *bind != '+')
 		return qfalse;
@@ -1182,7 +1182,7 @@ void IN_Frame( void )
 		// Console is down in windowed mode
 		IN_DeactivateMouse( cls.glconfig.isFullscreen );
 	}
-	else if( !cls.glconfig.isFullscreen && loading )
+	else if( clc.serverMessage[0] != '2' && !cls.glconfig.isFullscreen && loading ) // XXX added character selector condition
 	{
 		// Loading in windowed mode
 		IN_DeactivateMouse( cls.glconfig.isFullscreen );

@@ -52,7 +52,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
 
 #define	CONTENTS_BODY			0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_CORPSE			0x4000000
+#define	CONTENTS_CORPSE			0x4000000 // XXX xqx we use it for ground spawns and player corpses (we do not create regular Q3 corpses)
 #define	CONTENTS_DETAIL			0x8000000	// brushes not used for the bsp
 #define	CONTENTS_STRUCTURAL		0x10000000	// brushes used for the bsp
 #define	CONTENTS_TRANSLUCENT	0x20000000	// don't consume surface fragments inside

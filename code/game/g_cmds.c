@@ -79,7 +79,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
 			cl->ps.persistant[PERS_GAUNTLET_FRAG_COUNT], 
 			cl->ps.persistant[PERS_DEFEND_COUNT], 
-			cl->ps.persistant[PERS_ASSIST_COUNT], 
+			//cl->ps.persistant[PERS_ASSIST_COUNT],  // XXX xqx commented out
 			perfect,
 			cl->ps.persistant[PERS_CAPTURES]);
 		j = strlen(entry);
@@ -304,7 +304,7 @@ void Cmd_Give_f (gentity_t *ent)
 		return;
 	}
 	if (Q_stricmp(name, "assist") == 0) {
-		ent->client->ps.persistant[PERS_ASSIST_COUNT]++;
+		//ent->client->ps.persistant[PERS_ASSIST_COUNT]++; // XXX xqx commented out
 		return;
 	}
 

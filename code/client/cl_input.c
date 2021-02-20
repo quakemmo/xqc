@@ -299,8 +299,10 @@ void CL_AdjustAngles( void ) {
 	}
 
 	if ( !in_strafe.active ) {
-		cl.viewangles[YAW] -= speed*cl_yawspeed->value*CL_KeyState (&in_right);
-		cl.viewangles[YAW] += speed*cl_yawspeed->value*CL_KeyState (&in_left);
+		if (cl_xq_mouselook->integer == 0) { // XXX xqx XQ mouselook auto strafes when key turning
+			cl.viewangles[YAW] -= speed*cl_yawspeed->value*CL_KeyState (&in_right);
+			cl.viewangles[YAW] += speed*cl_yawspeed->value*CL_KeyState (&in_left);
+		}
 	}
 
 	cl.viewangles[PITCH] -= speed*cl_pitchspeed->value * CL_KeyState (&in_lookup);
@@ -334,13 +336,21 @@ void CL_KeyMove( usercmd_t *cmd ) {
 	forward = 0;
 	side = 0;
 	up = 0;
-	if ( in_strafe.active ) {
+
+// XXX xqx
+	if (cl_xq_mouselook->integer == 0) {
+		if ( in_strafe.active ) {
+			side += movespeed * CL_KeyState (&in_right);
+			side -= movespeed * CL_KeyState (&in_left);
+		}
+
+		side += movespeed * CL_KeyState (&in_moveright);
+		side -= movespeed * CL_KeyState (&in_moveleft);
+	} else {
 		side += movespeed * CL_KeyState (&in_right);
 		side -= movespeed * CL_KeyState (&in_left);
 	}
-
-	side += movespeed * CL_KeyState (&in_moveright);
-	side -= movespeed * CL_KeyState (&in_moveleft);
+// XXX -xqx
 
 
 	up += movespeed * CL_KeyState (&in_up);
@@ -452,6 +462,13 @@ void CL_MouseMove(usercmd_t *cmd)
 	cl.mouseIndex ^= 1;
 	cl.mouseDx[cl.mouseIndex] = 0;
 	cl.mouseDy[cl.mouseIndex] = 0;
+
+	// XXX xqx
+	if (cl_xq_mousemode->integer && !cl_xq_mouselook->integer) {
+		VM_Call(cgvm, CG_XQ_MOUSEMOVE, (int)mx*1000, (int)my*1000);
+		return;
+	}
+	// XXX -xqx
 
 	if (mx == 0.0f && my == 0.0f)
 		return;
@@ -846,6 +863,59 @@ void CL_WritePacket( void ) {
 	}
 #endif
 
+// XXX xqx
+	// Pop something from info ask queues and ask the server.
+
+	if (cgvm) {
+		int gotsomething = 1;
+		while (gotsomething) {
+			gotsomething = 0;
+			int64_t *itemptr = (int64_t *)VM_Call(cgvm, CG_XQ_ITEMINFO_ASK);
+			if (itemptr != NULL) {
+				int64_t item = *itemptr;
+				if (item != 0) {
+					if (xq_debugInfo->integer) {
+						Com_Printf("CL_WritePacket: added item %li to msg\n", item);
+					}
+					MSG_WriteByte(&buf, clc_iteminfo);
+					MSG_WriteLong(&buf, S64_1(item));
+					MSG_WriteLong(&buf, S64_2(item));
+					gotsomething = 1;
+				}
+			}
+
+			uint64_t *spellptr = (uint64_t *)VM_Call(cgvm, CG_XQ_SPELLINFO_ASK);
+			if (spellptr != NULL) {
+				int spell = *spellptr;
+				if (spell != 0) {
+					if (xq_debugInfo->integer) {
+						Com_Printf("CL_WritePacket: added spell %i to msg\n", spell);
+					}
+					MSG_WriteByte(&buf, clc_spellinfo);
+					MSG_WriteLong(&buf, spell);
+					gotsomething = 1;
+				}
+			}
+
+			int64_t *infoptr = (int64_t *)VM_Call(cgvm, CG_XQ_INFOINFO_ASK);
+			if (infoptr != NULL) {
+				if (infoptr[0] != 0) {
+					if (xq_debugInfo->integer) {
+						Com_Printf("CL_WritePacket: added info %li / %li / %li / %li to msg\n",
+							infoptr[0], infoptr[1], infoptr[2], infoptr[3]);
+					}
+					MSG_WriteByte(&buf, clc_infoinfo);
+					MSG_WriteLong(&buf, infoptr[0]);
+					MSG_WriteLong(&buf, infoptr[1]);
+					MSG_WriteLong(&buf, infoptr[2]);
+					MSG_WriteLong(&buf, infoptr[3]);
+					gotsomething = 1;
+				}
+			}
+		}
+    }
+// XXX -xqx
+
 	if ( count >= 1 ) {
 		if ( cl_showSend->integer ) {
 			Com_Printf( "(%i)", count );
@@ -891,6 +961,10 @@ void CL_WritePacket( void ) {
 		Com_Printf( "%i ", buf.cursize );
 	}
 
+// XXX xqx
+	clc.netchan.remoteAddress.keyid = xq_getkeyid();
+	strcpy(clc.netchan.remoteAddress.key, xq_getkeybyid(0, NULL));
+// XXX -xqx
 	CL_Netchan_Transmit (&clc.netchan, &buf);	
 }
 
@@ -1075,3 +1149,18 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-voiprecord");
 #endif
 }
+// XXX xqx
+void CL_XQ_ClearKeys() {
+	for (int i = 0;  i < MAX_KEYS;  i++) {
+		CL_KeyUpEvent(i, 0);
+	}
+}
+void CL_XQ_MouselookToggle(int on) {
+	if (on) {
+		Cvar_Set("cl_xq_mouselook", "1");
+	} else {
+		Cvar_Set("cl_xq_mouselook", "0");
+		CL_KeyUpEvent(K_UPARROW, 0);
+	}
+}
+// XXX -xqx

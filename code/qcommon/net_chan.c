@@ -47,7 +47,7 @@ to the new value before sending out any replies.
 */
 
 
-#define	MAX_PACKETLEN			1400		// max size of a network packet
+//#define	MAX_PACKETLEN			1400		// max size of a network packet // XXX xqx moved to qcommon.h
 
 #define	FRAGMENT_SIZE			(MAX_PACKETLEN - 100)
 #define	PACKET_HEADER			10			// two ints and a short
@@ -134,7 +134,7 @@ void Netchan_TransmitNextFragment( netchan_t *chan ) {
 		fragmentLength = chan->unsentLength - chan->unsentFragmentStart;
 	}
 
-	MSG_WriteShort( &send, chan->unsentFragmentStart );
+	MSG_WriteLong( &send, chan->unsentFragmentStart ); // XXX xqx changed MSG_WriteShort to MSG_WriteLong for bigger fragments
 	MSG_WriteShort( &send, fragmentLength );
 	MSG_WriteData( &send, chan->unsentBuffer + chan->unsentFragmentStart, fragmentLength );
 
@@ -273,13 +273,14 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 		int checksum = MSG_ReadLong(msg);
 
 		// UDP spoofing protection
-		if(NETCHAN_GENCHECKSUM(chan->challenge, sequence) != checksum)
+		if(NETCHAN_GENCHECKSUM(chan->challenge, sequence) != checksum) {
 			return qfalse;
+		}
 	}
 
 	// read the fragment information
 	if ( fragmented ) {
-		fragmentStart = MSG_ReadShort( msg );
+		fragmentStart = MSG_ReadLong( msg ); // XXX xqx changed MSG_ReadShort to MSG_ReadLong to allow more data to be sent as fragments
 		fragmentLength = MSG_ReadShort( msg );
 	} else {
 		fragmentStart = 0;		// stop warning message

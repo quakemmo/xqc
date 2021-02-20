@@ -1043,7 +1043,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			// the white image can be used with any set of parms, but other mismatches are errors
 			if ( strcmp( name, "*white" ) ) {
 				if ( image->flags != flags ) {
-					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
+					ri.Printf( PRINT_DEVELOPER_WHITE, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags ); // XXX xqx added _WHITE
 				}
 			}
 			return image;
@@ -1055,6 +1055,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	R_LoadImage( name, &pic, &width, &height );
 	if ( pic == NULL ) {
+		//if (!strcmp(name, "full_rt.tga")) xq_break(); // XXX xqx find out where the missing image errors come from if needed
+		Com_Printf("R_FindImageFile(%s, %i, %i) failed\n", name, type, flags); // XXX xqx added
 		return NULL;
 	}
 

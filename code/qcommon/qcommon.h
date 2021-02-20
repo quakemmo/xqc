@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #endif
 
+
+
 //#define	PRE_RELEASE_DEMO
 
 //============================================================================
@@ -72,6 +74,15 @@ void MSG_WriteChar (msg_t *sb, int c);
 void MSG_WriteByte (msg_t *sb, int c);
 void MSG_WriteShort (msg_t *sb, int c);
 void MSG_WriteLong (msg_t *sb, int c);
+// XXX xqx
+#define MAX_PACKETLEN 1400 // moved it here from net_chan.c as we also need it in net_ip.c
+void	xq_write_to_logfile(char *msg, char *filename);
+int64_t	MSG_ReadLongLong (msg_t *sb);
+void	MSG_WriteLongLong (msg_t *sb, int64_t c);
+void	xq_decrypt(void *data, int len, char *key, int keylen);
+void	xq_encrypt(void *data, int len, char *key, int keylen);
+int		xq_crypto_pad(byte *padded_data, const byte *data, int len, int pad_length);
+// XXX -xqx
 void MSG_WriteFloat (msg_t *sb, float f);
 void MSG_WriteString (msg_t *sb, const char *s);
 void MSG_WriteBigString (msg_t *sb, const char *s);
@@ -133,11 +144,11 @@ NET
 
 #define	MAX_PACKET_USERCMDS		32		// max number of usercmd_t in a packet
 
-#define	MAX_SNAPSHOT_ENTITIES	256
+#define	MAX_SNAPSHOT_ENTITIES	2048 // XXX xqx changed from 256 to 2048
 
 #define	PORT_ANY			-1
 
-#define	MAX_RELIABLE_COMMANDS	64			// max string commands buffered for restransmit
+#define	MAX_RELIABLE_COMMANDS	64
 
 typedef enum {
 	NA_BAD = 0,					// an address lookup failed
@@ -164,6 +175,11 @@ typedef struct {
 
 	unsigned short	port;
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
+// XXX xqx
+	uint64_t		keyid;
+	char			key[XQ_SESSION_LEN+1];
+	uint32_t		last_valid_packet_received_ts;
+// XXX -xqx
 } netadr_t;
 
 void		NET_Init( void );
@@ -188,7 +204,7 @@ void		NET_LeaveMulticast6(void);
 void		NET_Sleep(int msec);
 
 
-#define	MAX_MSGLEN				16384		// max length of a message, which may
+#define	MAX_MSGLEN				163840		// max length of a message, which may // XXX xqx changed from 16384 to 163840 so we don't overflow even if way too much stuff is going on
 											// be fragmented into multiple packets
 
 #define MAX_DOWNLOAD_WINDOW		48	// ACK window of 48 download chunks. Cannot set this higher, or clients
@@ -302,6 +318,11 @@ enum svc_ops_e {
 // new commands, supported only by ioquake3 protocol but not legacy
 	svc_voipSpeex,     // not wrapped in USE_VOIP, so this value is reserved.
 	svc_voipOpus,      //
+// XXX xqx
+	svc_iteminfo,
+	svc_spellinfo,
+	svc_infoinfo
+// XXX -xqx
 };
 
 
@@ -317,8 +338,14 @@ enum clc_ops_e {
 	clc_EOF,
 
 // new commands, supported only by ioquake3 protocol but not legacy
+	clc_voip,   // not wrapped in USE_VOIP, so this value is reserved.
 	clc_voipSpeex,   // not wrapped in USE_VOIP, so this value is reserved.
 	clc_voipOpus,    //
+// XXX xqx
+	clc_iteminfo,
+	clc_spellinfo,
+	clc_infoinfo,
+// XXX -xqx
 };
 
 /*
@@ -600,9 +627,9 @@ issues.
 #define	MAX_FILE_HANDLES	64
 
 #ifdef DEDICATED
-#	define Q3CONFIG_CFG "q3config_server.cfg"
+#	define Q3CONFIG_CFG "config_server.cfg" // XXX xqx q3config > config
 #else
-#	define Q3CONFIG_CFG "q3config.cfg"
+#	define Q3CONFIG_CFG "config.cfg" // XXX xqx q3config > config
 #endif
 
 qboolean FS_Initialized( void );
@@ -822,6 +849,11 @@ void		Info_Print( const char *s );
 
 void		Com_BeginRedirect (char *buffer, int buffersize, void (*flush)(char *));
 void		Com_EndRedirect( void );
+// XXX xqx
+void 		QDECL Com_Real_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+char		*xq_getkeybyid(uint64_t keyid, netadr_t *from); // in client/cl_xq.c
+uint64_t	xq_getkeyid(void);
+// XXX -xqx
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_Error( int code, const char *fmt, ... ) __attribute__ ((noreturn, format(printf, 2, 3)));
@@ -1032,6 +1064,7 @@ void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion
 
 void Key_WriteBindings( fileHandle_t f );
+void MM_Key_WriteBindings( fileHandle_t f ); // XXX xqx
 // for writing the config files
 
 void S_ClearSoundBuffer( void );
@@ -1066,6 +1099,7 @@ void IN_Init( void *windowData );
 void IN_Frame( void );
 void IN_Shutdown( void );
 void IN_Restart( void );
+
 
 /*
 ==============================================================
@@ -1228,5 +1262,4 @@ extern huffman_t clientHuffTables;
 #define DLF_NO_REDIRECT 2
 #define DLF_NO_UDP 4
 #define DLF_NO_DISCONNECT 8
-
 #endif // _QCOMMON_H_

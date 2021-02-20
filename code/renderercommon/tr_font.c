@@ -559,3 +559,90 @@ void R_DoneFreeType(void) {
 	registeredFontCount = 0;
 }
 
+// XXX xqx
+#define XQ_LEN			100
+#define XQ_CACHE_MAX	1000
+typedef struct xq_shader_cache_s {
+    char		name[XQ_LEN+1];
+    int			level;
+    qhandle_t	qh;
+} xq_shader_cache_t;
+static xq_shader_cache_t xq_cache[XQ_CACHE_MAX] = {0};
+
+void RE_XQ_ClearTShaderCache(void) {
+	memset(&xq_cache, 0, sizeof(xq_cache));
+}
+qhandle_t RE_XQ_TShader(const char *name, int level) { // set init_done to 1 to clear cache (ie: on zoning 
+	// Makes a shader from name for name plate.
+
+
+	static int init_done = 0;
+	if (init_done == 0) {
+		RE_XQ_ClearTShaderCache();
+		init_done = 1;
+	}
+
+	// Figure out the shader name
+	char shader_name[XQ_LEN+1] = {0};
+	snprintf(shader_name, XQ_LEN, "lvl_%i_name_%s", level, name);
+
+
+	// See if we have it in the cache
+	int i;
+	xq_shader_cache_t *c;
+	for (i = 0;  i < XQ_CACHE_MAX;  i++) {
+		c = &xq_cache[i];
+		if (c->qh == 0) break;
+		if (xq_seq(c->name, (char *)name)) {
+			if (c->level == level) {
+				return c->qh;
+			}
+		}
+	}
+
+	// Cache missed, can we create a new entry?
+	if (i == XQ_CACHE_MAX) {
+		// Cache is full
+		return -1;
+	}
+
+
+	// Need to create a new shader
+	SDL_Surface *surface = tr_XQ_FBMP(name, level);
+	if (surface == NULL) {
+		return -1;
+	}
+
+
+	// New shader will go here
+	c = &xq_cache[i];
+
+	if (r_xqdebugTShader->integer) {
+		ri.Printf(PRINT_WARNING, "XQ: New TShader name: [%s], w:%i, h:%i\n", name, surface->w, surface->h);
+	}
+
+
+	// Make the actual shader
+	image_t *image = R_CreateImage(shader_name, surface->pixels, surface->w, surface->h, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0);
+	SDL_FreeSurface(surface);
+	if (r_xqdebugTShader->integer) {
+		ri.Printf(PRINT_WARNING, "XQ: New R_CreateImage name: [%s], w:%i, h:%i, uw:%i, uh:%i\n",
+			image->imgName, image->width, image->height, image->uploadWidth, image->uploadHeight);
+	}
+	qhandle_t qh = RE_RegisterShaderFromImage(shader_name, LIGHTMAP_2D, image, qtrue);
+	tr_XQ_SetShaderFlags(qh);
+
+
+	// Store it in the cache
+	c->qh = qh;
+	c->level = level;
+	Q_strncpyz(c->name, name, sizeof(c->name));
+	if (r_xqdebugTShader->integer) {
+		ri.Printf(PRINT_DEVELOPER, "Setting cache entry %i for name %s, level %i to QH %i\n", i, name, level, c->qh);
+	}
+
+
+	// Return the handle
+	return qh;
+}
+// XXX -xqx

@@ -1460,3 +1460,16 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 	else
 		return s;
 }
+
+// XXX xqx
+int64_t S64(const char *s) {
+	char *ptr;
+	return strtoll(s, &ptr, 10);
+}
+int S64_1(uint64_t i) {
+    return i >> 32;
+}
+int S64_2(uint64_t i) {
+    return (int)i;
+}
+// XXX -xqx

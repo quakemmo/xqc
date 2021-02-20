@@ -235,8 +235,17 @@ static void CG_Item( centity_t *cent ) {
 
 	es = &cent->currentState;
 	if ( es->modelindex >= bg_numItems ) {
-		CG_Error( "Bad item index %i on entity", es->modelindex );
+		//CG_Error( "Bad item index %i on entity", es->modelindex ); // XXX xqx commented out
 	}
+// XXX xqx
+	qhandle_t model2 = 0; // 2nd model for stuff like arena health items
+	int box = 0, kickable = 0;
+	if (es->modelindex == XQ_GROUND_GENERIC) {
+		box = 1;
+	} else if (es->modelindex == XQ_GROUND_KICKABLE) {
+		kickable = 1;
+	}
+// XXX -xqx
 
 	// if set to invisible, skip
 	if ( !es->modelindex || ( es->eFlags & EF_NODRAW ) ) {
@@ -258,12 +267,17 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
+// XXX xqx
+if (!box && !kickable) {
 	// items bob up and down continuously
 	scale = 0.005 + cent->currentState.number * 0.00001;
 	cent->lerpOrigin[2] += 4 + cos( ( cg.time + 1000 ) *  scale ) * 4;
+}
+// XXX -xqx
 
 	memset (&ent, 0, sizeof(ent));
 
+if (!box && !kickable) { // XXX xqx
 	// autorotate at one of two speeds
 	if ( item->giType == IT_HEALTH ) {
 		VectorCopy( cg.autoAnglesFast, cent->lerpAngles );
@@ -272,12 +286,17 @@ static void CG_Item( centity_t *cent ) {
 		VectorCopy( cg.autoAngles, cent->lerpAngles );
 		AxisCopy( cg.autoAxis, ent.axis );
 	}
+// XXX xqx
+} else {
+    AnglesToAxis( cent->lerpAngles, ent.axis );
+}
+// XXX -xqx
 
 	wi = NULL;
 	// the weapons have their origin where they attatch to player
 	// models, so we need to offset them or they will rotate
 	// eccentricly
-	if ( item->giType == IT_WEAPON ) {
+	if (0&& item->giType == IT_WEAPON ) { // XXX xqx commented out
 		wi = &cg_weapons[item->giTag];
 		cent->lerpOrigin[0] -= 
 			wi->weaponMidpoint[0] * ent.axis[0][0] +
@@ -300,7 +319,67 @@ static void CG_Item( centity_t *cent ) {
 		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
 	}
 
-	ent.hModel = cg_items[es->modelindex].models[0];
+// XXX xqx
+	if (es->modelindex == XQ_GROUND_GENERIC || es->modelindex == XQ_GROUND_KICKABLE) {
+		if (es->modelindex2 < 1) {
+			ent.hModel = xq_UtilModel("ground/box");
+		} else {
+			if (es->modelindex2 <= (xqst->item_models_registered + 1)) {
+				ent.hModel = xqst->item_models[es->modelindex2 - 1];
+			} else {
+				ent.hModel = xq_UtilModel("ground/box");
+			}
+		}
+	} else if (es->modelindex == XQ_GROUND_HEALTH_ARENA_5) {
+		ent.hModel = xq_UtilModel("ground/arena/health_5");
+		model2 = xq_UtilModel("ground/arena/health_5_second");
+	} else if (es->modelindex == XQ_GROUND_HEALTH_ARENA_25) {
+		ent.hModel = xq_UtilModel("ground/arena/health_25");
+		model2 = xq_UtilModel("ground/arena/health_25_second");
+	} else if (es->modelindex == XQ_GROUND_HEALTH_ARENA_50) {
+		ent.hModel = xq_UtilModel("ground/arena/health_50");
+		model2 = xq_UtilModel("ground/arena/health_50_second");
+	} else if (es->modelindex == XQ_GROUND_HEALTH_ARENA_100) {
+		ent.hModel = xq_UtilModel("ground/arena/health_100");
+		model2 = xq_UtilModel("ground/arena/health_100_second");
+	} else if (es->modelindex == XQ_GROUND_ENERGY_ARENA_100) {
+		ent.hModel = xq_UtilModel("ground/arena/energy_100");
+	} else if (es->modelindex == XQ_GROUND_ENDURANCE_ARENA_100) {
+		ent.hModel = xq_UtilModel("ground/arena/endurance_100");
+	} else if (es->modelindex == XQ_GROUND_HEALTH) {
+		ent.hModel = xq_UtilModel("ground/health");
+	} else if (es->modelindex == XQ_GROUND_MANA) {
+		ent.hModel = xq_UtilModel("ground/mana");
+	} else if (es->modelindex == XQ_GROUND_DAMAGE) {
+		ent.hModel = xq_UtilModel("ground/damage");
+	} else if (es->modelindex == XQ_GROUND_ENERGIZE) {
+		ent.hModel = xq_UtilModel("ground/energize");
+	} else if (es->modelindex == XQ_GROUND_SPELL) {
+		ent.hModel = xq_UtilModel("ground/spell");
+	} else if (es->modelindex == XQ_GROUND_COINSPELL) {
+		ent.hModel = xq_UtilModel("ground/coinspell");
+	}
+
+	// if EF_XQ_BLINKING is set, blink.
+	if (es->eFlags & EF_XQ_BLINKING) {
+
+		if (cent->xq_blink_next == 0) {
+			cent->xq_blink_next = xq_msec() + 250;
+		} else if (xq_msec() >= cent->xq_blink_next) {
+			cent->xq_blink_next = xq_msec() + 250;
+			if (cent->xq_blink_what == 0) {
+				cent->xq_blink_what = 1;
+			} else {
+				cent->xq_blink_what = 0;
+			}
+		} else {
+			if (cent->xq_blink_what == 1) {
+				return;
+			}
+		}
+	}
+
+// XXX -xqx
 
 	VectorCopy( cent->lerpOrigin, ent.origin);
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
@@ -349,7 +428,7 @@ static void CG_Item( centity_t *cent ) {
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);
 
-	if ( item->giType == IT_WEAPON && wi && wi->barrelModel ) {
+	if (0&& item->giType == IT_WEAPON && wi && wi->barrelModel ) { // XXX xqx disabled
 		refEntity_t	barrel;
 		vec3_t		angles;
 
@@ -372,6 +451,19 @@ static void CG_Item( centity_t *cent ) {
 
 		trap_R_AddRefEntityToScene( &barrel );
 	}
+
+	// XXX xqx
+	if (model2) {
+		vec3_t spinAngles;
+		VectorClear(spinAngles);
+		ent.origin[2] -= 0;
+		ent.hModel = model2;
+		spinAngles[1] = (cg.time & 1023) * 360 / -1024.0f;
+		AnglesToAxis(spinAngles, ent.axis);
+		trap_R_AddRefEntityToScene(&ent);
+	}
+
+	// XXX -xqx
 
 	// accompanying rings / spheres for powerups
 	if ( !cg_simpleItems.integer ) 
@@ -1011,6 +1103,15 @@ static void CG_AddCEntity( centity_t *cent ) {
 	case ET_GENERAL:
 		CG_General( cent );
 		break;
+// XXX xqx
+	case ET_XQ_GROUND:
+		CG_Item(cent);
+		break;
+	case ET_XQ_MOB:
+	case ET_XQ_CORPSE:
+		xq_npc_draw(cent);
+		break;
+// XXX -xqx
 	case ET_PLAYER:
 		CG_Player( cent );
 		break;

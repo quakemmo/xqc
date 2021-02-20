@@ -27,7 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 int g_console_field_width = 78;
 
 
-#define	NUM_CON_TIMES 4
+// XXX xqx
+#define	NUM_CON_TIMES 1000
+// XXX xqx
 
 #define		CON_TEXTSIZE	32768
 typedef struct {
@@ -106,16 +108,44 @@ void Con_MessageMode_f (void) {
 
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
+// XXX xqx
+// Pressing the slash instead of enter while not typing in CLI will start
+// typing after prepending a slash for convenience.
+/*
+================
+Con_MessageModeSlash_f
+================
+*/
+void Con_MessageModeSlash_f (void) {
+	chat_playerNum = -1;
+	chat_team = qfalse;
+	Field_Clear( &chatField );
+	chatField.buffer[0] = '/';
+	chatField.cursor = 1;
+	chatField.widthInChars = 30;
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+// XXX -xqx
 
 /*
 ================
 Con_MessageMode2_f
 ================
 */
+// XXX xqx pressing 't' will prepend "/ooc " to CLI
 void Con_MessageMode2_f (void) {
 	chat_playerNum = -1;
-	chat_team = qtrue;
+	chat_team = qfalse; // XXX xqx flipped
 	Field_Clear( &chatField );
+// XXX xqx added
+
+	chatField.buffer[0] = '/';
+	chatField.buffer[1] = 'o';
+	chatField.buffer[2] = 'o';
+	chatField.buffer[3] = 'c';
+	chatField.buffer[4] = ' ';
+	chatField.cursor = 5;
+// XXX -xqx added
 	chatField.widthInChars = 25;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
@@ -263,6 +293,10 @@ Con_ClearNotify
 */
 void Con_ClearNotify( void ) {
 	int		i;
+// XXX xqx
+// Don't clear it between zones.
+	return;
+// XXX -xqx
 	
 	for ( i = 0 ; i < NUM_CON_TIMES ; i++ ) {
 		con.times[i] = 0;
@@ -278,12 +312,31 @@ Con_CheckResize
 If the line width has changed, reformat the buffer.
 ================
 */
+
+int xq_NUM_CON_TIMES(void) {
+	int chath = 100;
+//Com_Printf("NUM_CON_TIMES %i\n", chath);
+	if (cl_xq_chat_h) {
+		chath = cl_xq_chat_h->integer;
+	}
+	if (chath < 100) chath = 100;
+	return chath / TINYCHAR_HEIGHT;
+}
+
+
 void Con_CheckResize (void)
 {
 	int		i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	short	tbuf[CON_TEXTSIZE];
 
-	width = (SCREEN_WIDTH / SMALLCHAR_WIDTH) - 2;
+// XXX xqx
+	int chatw = 800;
+	if (cl_xq_chat_w) {
+		chatw = cl_xq_chat_w->integer;
+	}
+	if (chatw < 800) chatw = 800;
+	width = (chatw / SMALLCHAR_WIDTH) - 2;
+// XXX -xqx
 
 	if (width == con.linewidth)
 		return;
@@ -356,7 +409,10 @@ Con_Init
 void Con_Init (void) {
 	int		i;
 
-	con_notifytime = Cvar_Get ("con_notifytime", "3", 0);
+// XXX xqx
+	// Changed from 3 to a lot.
+	con_notifytime = Cvar_Get ("con_notifytime", "8640000", 0);
+// XXX xqx
 	con_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
 	con_autoclear = Cvar_Get("con_autoclear", "1", CVAR_ARCHIVE);
 
@@ -370,6 +426,7 @@ void Con_Init (void) {
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("togglemenu", Con_ToggleMenu_f);
+	Cmd_AddCommand ("messagemodeslash", Con_MessageModeSlash_f);
 	Cmd_AddCommand ("messagemode", Con_MessageMode_f);
 	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand ("messagemode3", Con_MessageMode3_f);
@@ -409,9 +466,9 @@ void Con_Linefeed (qboolean skipnotify)
 	if (con.current >= 0)
 	{
     if (skipnotify)
-		  con.times[con.current % NUM_CON_TIMES] = 0;
+		  con.times[con.current % xq_NUM_CON_TIMES()] = 0;
     else
-		  con.times[con.current % NUM_CON_TIMES] = cls.realtime;
+		  con.times[con.current % xq_NUM_CON_TIMES()] = cls.realtime;
 	}
 
 	con.x = 0;
@@ -508,9 +565,9 @@ void CL_ConsolePrint( char *txt ) {
 	if (con.current >= 0) {
 		// NERVE - SMF
 		if ( skipnotify ) {
-			prev = con.current % NUM_CON_TIMES - 1;
+			prev = con.current % xq_NUM_CON_TIMES() - 1;
 			if ( prev < 0 )
-				prev = NUM_CON_TIMES - 1;
+				prev = xq_NUM_CON_TIMES() - 1;
 			con.times[prev] = 0;
 		}
 		else
@@ -561,8 +618,8 @@ Con_DrawNotify
 Draws the last few lines of output transparently over the game top
 ================
 */
-void Con_DrawNotify (void)
-{
+// XXX xqx
+void Con_DrawNotify_orig (void) {
 	int		x, v;
 	short	*text;
 	int		i;
@@ -574,6 +631,7 @@ void Con_DrawNotify (void)
 	re.SetColor( g_color_table[currentColor] );
 
 	v = 0;
+
 	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
 	{
 		if (i < 0)
@@ -629,6 +687,30 @@ void Con_DrawNotify (void)
 	}
 
 }
+void Con_DrawNotify (void) {
+	int chat_type_x = Cvar_Get("cl_xq_chat_type_x", "0", CVAR_TEMP)->integer;
+	int chat_type_y = Cvar_Get("cl_xq_chat_type_y", "0", CVAR_TEMP)->integer;
+
+	re.SetColor( NULL );
+
+	if (Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
+		return;
+	}
+
+
+	// draw the chat line
+	int skip;
+	if (Key_GetCatcher() & KEYCATCH_MESSAGE) {
+		if (chat_team) {
+			skip = 10;
+		} else {
+			skip = 5;
+		}
+		xq_Field_AnyDraw(&chatField, chat_type_x, chat_type_y,
+			SCREEN_WIDTH - (skip + 1) * XQ_CHAT_WIDTH, qtrue, qtrue, XQ_CHAT_WIDTH, XQ_CHAT_HEIGHT);
+	}
+}
+// XXX -xqx
 
 /*
 ================
@@ -690,6 +772,7 @@ void Con_DrawSolidConsole( float frac ) {
 	con.vislines = lines;
 	rows = (lines-SMALLCHAR_HEIGHT)/SMALLCHAR_HEIGHT;		// rows of text to draw
 
+
 	y = lines - (SMALLCHAR_HEIGHT*3);
 
 	// draw from the bottom up
@@ -744,12 +827,13 @@ void Con_DrawSolidConsole( float frac ) {
 
 
 
+// XXX xqx
 /*
 ==================
 Con_DrawConsole
 ==================
 */
-void Con_DrawConsole( void ) {
+void Con_DrawConsole_orig( void ) {
 	// check for console width changes from a vid mode change
 	Con_CheckResize ();
 
@@ -770,6 +854,34 @@ void Con_DrawConsole( void ) {
 		}
 	}
 }
+void Con_DrawConsole(int notify) {
+	// check for console width changes from a vid mode change
+	Con_CheckResize ();
+
+	// if disconnected, render console full screen
+	if ( clc.state == CA_DISCONNECTED ) {
+		if ( !( Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME)) ) {
+			Con_DrawSolidConsole( 1.0 );
+			return;
+		}
+	}
+	if (notify == 1) {
+		if ( clc.state == CA_ACTIVE ) {
+			Con_DrawNotify ();
+		}
+		return;
+	}
+
+	if ( con.displayFrac ) {
+		Con_DrawSolidConsole( con.displayFrac );
+	} else {
+		// draw notify lines
+		//if ( clc.state == CA_ACTIVE ) {
+		//	Con_DrawNotify ();
+		//}
+	}
+}
+// XXX -xqx
 
 //================================================================
 

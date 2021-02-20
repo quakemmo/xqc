@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../renderercommon/tr_types.h"
 #include "../game/bg_public.h"
 #include "cg_public.h"
+#include "xq/xq1.h"
 
 
 // The entire cgame module is unloaded and reloaded on each level change,
@@ -84,8 +85,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define	DEFAULT_TEAM_MODEL		"james"
 #define	DEFAULT_TEAM_HEAD		"*james"
 #else
-#define	DEFAULT_TEAM_MODEL		"sarge"
-#define	DEFAULT_TEAM_HEAD		"sarge"
+#define	DEFAULT_TEAM_MODEL		"james"
+#define	DEFAULT_TEAM_HEAD		"*james"
 #endif
 
 #define DEFAULT_REDTEAM_NAME		"Stroggs"
@@ -191,6 +192,28 @@ typedef struct centity_s {
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
 	vec3_t			lerpAngles;
+// XXX xqx
+	vec3_t			xq_previous_origin;		// our origin last frame
+	uint32_t		xq_last_pop_id;			// our pop_id last frame
+	uint32_t		xq_last_corpse_status;	// were we a corpse last frame
+	uint32_t		xq_last_model_index;	// model index we had last snapshot
+	float			xq_last_heading;		// xq_heading last SERVER frame
+	uint32_t		xq_last_snapshottime;	// carries cent->snapShotTime we processed this entity last at, used to avoid processing some stuff more than once per server frame
+	uint32_t		xq_just_popped;			// set to 1 on the frame the mob pops, 0 otherwise
+	uint64_t		xq_blink_next;			// used for the EF_XQ_BLINKING flag
+	byte			xq_blink_what;			// same
+
+	// torso animation queue, positions 1 and 2 and timestamps of creation.  When too old, they are discarded and not played
+	uint32_t		xq_anim1;
+	uint32_t		xq_anim1_ts;
+	uint32_t		xq_anim2;
+	uint32_t		xq_anim2_ts;
+
+	uint32_t		xq_torsoAnim;			// we use this for NPCs instead of es->torsoAnim
+	uint32_t		xq_last_footstep_ts;	// time of last time the mob played a footstep sound, so we don't play it several times in the same animation frame
+	uint32_t		xq_last_painsound_ts;	// same for the npc pain sound
+
+// XXX -xqx
 } centity_t;
 
 
@@ -366,13 +389,16 @@ typedef struct {
 	qhandle_t		headModel;
 	qhandle_t		headSkin;
 
-	qhandle_t		modelIcon;
+	//qhandle_t		modelIcon; // XXX xqx commented out
 
 	animation_t		animations[MAX_TOTALANIMATIONS];
 
 	sfxHandle_t		sounds[MAX_CUSTOM_SOUNDS];
 } clientInfo_t;
 
+// XXX xqx moved from cg_players.c
+extern char    *cg_customSoundNames[MAX_CUSTOM_SOUNDS];
+// XXX -xqx
 
 // each WP_* weapon enum has an associated weaponInfo_t
 // that contains media references necessary to present the
@@ -737,6 +763,10 @@ typedef struct {
 	qhandle_t	plasmaBallShader;
 	qhandle_t	waterBubbleShader;
 	qhandle_t	bloodTrailShader;
+// XXX xqx
+	qhandle_t	arenaPlayerEmphasizeShader;
+// XXX -xqx
+
 #ifdef MISSIONPACK
 	qhandle_t	nailPuffShader;
 	qhandle_t	blueProxMine;
@@ -864,6 +894,16 @@ typedef struct {
 	sfxHandle_t	gibBounce3Sound;
 	sfxHandle_t	teleInSound;
 	sfxHandle_t	teleOutSound;
+// XXX xqx
+	sfxHandle_t	dingSound;
+	sfxHandle_t	silenceSound;
+	sfxHandle_t	kickableGoal1Sound;
+	sfxHandle_t	kickableGoal2Sound;
+	sfxHandle_t	kickableTouchSound;
+	sfxHandle_t	kickableBounceSound;
+	qhandle_t	mouseCursor;
+	qhandle_t	xqTargetShader;
+// XXX -xqx
 	sfxHandle_t	noAmmoSound;
 	sfxHandle_t	respawnSound;
 	sfxHandle_t talkSound;
@@ -1190,6 +1230,30 @@ extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_obeliskRespawnDelay;
 #endif
+// XXX xqx
+extern	vmCvar_t		cg_bbox;
+extern	vmCvar_t		cg_qwBench;
+extern	vmCvar_t		cg_bigBars;
+extern	vmCvar_t		cg_bigTarget;
+extern	vmCvar_t		cg_xpBar;
+extern	vmCvar_t		xq_winpos;
+extern	vmCvar_t		cg_emphasizeArena;
+extern	vmCvar_t		xq_debugAnimodel;
+extern	vmCvar_t		xq_debugModelShader;
+extern	vmCvar_t		xq_debugNpcDraw;
+extern	vmCvar_t		xq_debugChat;
+extern	vmCvar_t		xq_debugDebdisp;
+extern	vmCvar_t		xq_debugBbox;
+extern	vmCvar_t		xq_debugSpells;
+extern	vmCvar_t		xq_debugInfo;
+extern	vmCvar_t		xq_debugInfoInfo;
+extern	vmCvar_t		xq_debugTarget;
+extern	vmCvar_t		xq_debugDrawPlayer;
+extern	vmCvar_t		xq_namePlateAlpha;
+extern	vmCvar_t		xq_printFrameTime;
+extern	vmCvar_t		cg_thirdPersonRangeGoal;
+extern	vmCvar_t		cg_thirdPersonAngleGoal;
+// XXX -xqx
 
 //
 // cg_main.c
@@ -1242,12 +1306,25 @@ void CG_DrawString( float x, float y, const char *string,
 				   float charWidth, float charHeight, const float *modulate );
 
 
-void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
+void CG_DrawStringExt(qw_window_t *win, int x, int y, const char *string, const float *setColor, 
 		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
+// XXX xqx
+void xq_DrawPic(float x, float y, float width, float height, qhandle_t hShader);
+int xq_DrawStringExt(qw_window_t *win, int x, int y, const char *string, const float *setColor, qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars);
+void xq_DrawChar(int x, int y, int width, int height, int ch);
+
+int CG_DrawTinyString(qw_window_t *win, int x, int y, const char *s, float alpha);
+void CG_DrawTinyStringColor(int x, int y, const char *s, vec4_t color);
+void xq_DrawSides(float x, float y, float w, float h, float size);
+void xq_FillRect(float x, float y, float width, float height, const float *color);
+void xq_FillRect_Gradient(float x, float y, float width, float height, const float *color1, const float *color2, int mirror);
+void xq_DrawRect(float x, float y, float width, float height, float size, const float *color);
+void xq_DrawTopBottom(float x, float y, float w, float h, float size);
+// XXX xqx
 
 int CG_DrawStrlen( const char *str );
 
@@ -1368,7 +1445,7 @@ void CG_Bullet( vec3_t origin, int sourceEntityNum, vec3_t normal, qboolean fles
 void CG_RailTrail( clientInfo_t *ci, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi );
 void CG_AddViewWeapon (playerState_t *ps);
-void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team );
+void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team, int flags); // XXX xqx added flags
 void CG_DrawWeaponSelect( void );
 
 void CG_OutOfAmmoChange( void );	// should this be in pmove?
@@ -1578,6 +1655,17 @@ void		trap_R_LoadWorldMap( const char *mapname );
 // hitches during gameplay
 qhandle_t	trap_R_RegisterModel( const char *name );			// returns rgb axis if not found
 qhandle_t	trap_R_RegisterSkin( const char *name );			// returns all white if not found
+// XXX xqx
+qhandle_t	trap_R_XQ_TShader( const char *name , int level);
+void		trap_ConNotify(void );
+void		trap_XQ_Encrypt(void *data, int len, char *key, int keylen);
+void		trap_XQ_Decrypt(void *data, int len, char *key, int keylen);
+int			trap_XQ_CryptoPad(byte *padded_data, const byte *data, int len, int pad_len);
+int			trap_XQ_Pers_Get_I64(char *name, int64_t *ret);
+int			trap_XQ_Pers_Set_I64(char *name, int64_t val);
+int64_t		trap_XQ_Get_Keys(void);
+int			trap_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies);
+// XXX -xqx
 qhandle_t	trap_R_RegisterShader( const char *name );			// returns all white if not found
 qhandle_t	trap_R_RegisterShaderNoMip( const char *name );			// returns all white if not found
 
@@ -1686,4 +1774,15 @@ void	CG_ParticleExplosion (char *animStr, vec3_t origin, vec3_t vel, int duratio
 extern qboolean		initparticles;
 int CG_NewParticleArea ( int num );
 
+// XXX xqx
+void CG_ParticleBloodCloud(centity_t *cent, vec3_t origin, vec3_t dir);
 
+qboolean    CG_FileExists(const char *filename); // function used to be static in cg_players.c
+void CG_AddWeaponWithPowerups(refEntity_t *gun, int flags, entityState_t *es); // removed static decl in cg_weapon.c as we need to call it for held item rendering from cg_xq.c, added flags, added es
+void trap_XQ_Mouselook(int on);
+void trap_XQ_ClearKeys(void);
+
+// XXX -xqx
+
+
+#include "xq/xq2.h"

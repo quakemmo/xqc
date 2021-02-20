@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "q_shared.h"
 #include "qcommon.h"
 
+
 static huffman_t		msgHuff;
 
 static qboolean			msgInit = qfalse;
@@ -304,6 +305,12 @@ void MSG_WriteShort( msg_t *sb, int c ) {
 void MSG_WriteLong( msg_t *sb, int c ) {
 	MSG_WriteBits( sb, c, 32 );
 }
+// XXX xqx
+void MSG_WriteLongLong(msg_t *sb, int64_t c) {
+	MSG_WriteBits(sb, (uint64_t)c >> 32, 32);
+	MSG_WriteBits(sb, (int32_t)c, 32);
+}
+// XXX -xqx
 
 void MSG_WriteFloat( msg_t *sb, float f ) {
 	floatint_t dat;
@@ -432,6 +439,23 @@ int MSG_ReadLong( msg_t *msg ) {
 	
 	return c;
 }
+// XXX xqx
+int64_t MSG_ReadLongLong(msg_t *msg) {
+	uint32_t a = MSG_ReadBits(msg, 32);
+	if (msg->readcount > msg->cursize) {
+		a = -1;
+	}	
+
+	uint32_t b = MSG_ReadBits(msg, 32);
+	if (msg->readcount > msg->cursize) {
+		b = -1;
+	}	
+
+	int64_t c = (((int64_t)a) << 32) + b;
+	
+	return c;
+}
+// XXX -xqx
 
 float MSG_ReadFloat( msg_t *msg ) {
 	floatint_t dat;
@@ -756,11 +780,11 @@ netField_t	entityStateFields[] =
 { NETF(angles2[1]), 0 },
 { NETF(eType), 8 },
 { NETF(torsoAnim), 8 },
-{ NETF(eventParm), 8 },
+{ NETF(eventParm), 32 },
 { NETF(legsAnim), 8 },
 { NETF(groundEntityNum), GENTITYNUM_BITS },
 { NETF(pos.trType), 8 },
-{ NETF(eFlags), 19 },
+{ NETF(eFlags), 32 },
 { NETF(otherEntityNum), GENTITYNUM_BITS },
 { NETF(weapon), 8 },
 { NETF(clientNum), 8 },
@@ -793,6 +817,68 @@ netField_t	entityStateFields[] =
 { NETF(angles2[0]), 0 },
 { NETF(angles2[2]), 0 },
 { NETF(constantLight), 32 },
+// XXX xqx
+
+{ NETF(xq_enttype), 8 },
+
+{ NETF(xq_name1), 32 },
+{ NETF(xq_name2), 32 },
+{ NETF(xq_name3), 32 },
+{ NETF(xq_name4), 32 },
+{ NETF(xq_name5), 32 },
+{ NETF(xq_name6), 32 },
+{ NETF(xq_name7), 32 },
+{ NETF(xq_name8), 32 },
+
+{ NETF(xq_corpse_id), 32},
+
+{ NETF(xq_weapon_delay_1), 32},
+{ NETF(xq_weapon_spread), 32},
+{ NETF(xq_weapon_projectiles), 32},
+{ NETF(xq_weapon_range), 32},
+
+{ NETF(xq_speed), 16},
+{ NETF(xq_level), 8},
+{ NETF(xq_jump_velocity), 16},
+{ NETF(xq_spell_mod_speed_perc), 16},
+{ NETF(xq_looting), 8},
+{ NETF(xq_sitting), 8},
+
+{ NETF(xq_arena_kills), 32},
+{ NETF(xq_arena_deaths), 32},
+{ NETF(xq_ping), 32},
+{ NETF(xq_time), 32},
+
+{ NETF(xq_skill_swimming), 32},
+{ NETF(xq_pop_id), 32},
+
+{ NETF(xq_casting), 8},
+{ NETF(xq_casting_sound), 8},
+{ NETF(xq_pfx_received), 32},
+{ NETF(xq_pfx_received_sound), 32},
+{ NETF(xq_casting_hash), 32},
+
+{ NETF(xq_flags), 32},
+{ NETF(xq_anim), 8},
+{ NETF(xq_invis), 8},
+
+{ NETF(xq_heading), 0},
+{ NETF(xq_pitch), 0},
+{ NETF(xq_roll), 0},
+{ NETF(xq_app_model), 16},
+{ NETF(xq_app_model_scale), 16},
+{ NETF(xq_app_texture_num_legs), 32},
+{ NETF(xq_app_texture_num_torso), 32},
+{ NETF(xq_app_texture_num_head), 32},
+{ NETF(xq_app_texture_num_feet), 32},
+{ NETF(xq_app_texture_num_arms), 32},
+{ NETF(xq_app_texture_num_leftwrist), 32},
+{ NETF(xq_app_texture_num_rightwrist), 32},
+{ NETF(xq_app_texture_num_hands), 32},
+{ NETF(xq_app_held_primary_model), 32},
+{ NETF(xq_app_held_secondary_model), 32},
+
+// XXX -xqx
 { NETF(frame), 16 }
 };
 
@@ -870,7 +956,7 @@ void MSG_WriteDeltaEntity( msg_t *msg, struct entityState_s *from, struct entity
 	MSG_WriteBits( msg, 0, 1 );			// not removed
 	MSG_WriteBits( msg, 1, 1 );			// we have a delta
 
-	MSG_WriteByte( msg, lc );	// # of changes
+	MSG_WriteShort( msg, lc );	// # of changes // XXX xqx changed WriteByte to WriteShort
 
 	oldsize += numFields;
 
@@ -968,7 +1054,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 	}
 
 	numFields = ARRAY_LEN( entityStateFields );
-	lc = MSG_ReadByte(msg);
+	lc = MSG_ReadShort(msg); // XXX xqx Changed ReadByte to ReadShort
 
 	if ( lc > numFields || lc < 0 ) {
 		Com_Error( ERR_DROP, "invalid entityState field count" );
@@ -1082,12 +1168,12 @@ netField_t	playerStateFields[] =
 { PSF(pm_flags), 16 },
 { PSF(groundEntityNum), GENTITYNUM_BITS },
 { PSF(weaponstate), 4 },
-{ PSF(eFlags), 16 },
+{ PSF(eFlags), 32 },
 { PSF(externalEvent), 10 },
 { PSF(gravity), 16 },
 { PSF(speed), 16 },
 { PSF(delta_angles[1]), 16 },
-{ PSF(externalEventParm), 8 },
+{ PSF(externalEventParm), 32 },
 { PSF(viewheight), -8 },
 { PSF(damageEvent), 8 },
 { PSF(damageYaw), 8 },
@@ -1098,8 +1184,8 @@ netField_t	playerStateFields[] =
 { PSF(delta_angles[0]), 16 },
 { PSF(delta_angles[2]), 16 },
 { PSF(torsoTimer), 12 },
-{ PSF(eventParms[0]), 8 },
-{ PSF(eventParms[1]), 8 },
+{ PSF(eventParms[0]), 32 },
+{ PSF(eventParms[1]), 32 },
 { PSF(clientNum), 8 },
 { PSF(weapon), 5 },
 { PSF(viewangles[2]), 0 },
@@ -1107,6 +1193,497 @@ netField_t	playerStateFields[] =
 { PSF(grapplePoint[1]), 0 },
 { PSF(grapplePoint[2]), 0 },
 { PSF(jumppad_ent), GENTITYNUM_BITS },
+// XXX xqx
+{ PSF(xq_target), 32 },
+
+{ PSF(xq_enttype), 8 },
+{ PSF(xq_name1), 32 },
+{ PSF(xq_name2), 32 },
+{ PSF(xq_name3), 32 },
+{ PSF(xq_name4), 32 },
+{ PSF(xq_name5), 32 },
+{ PSF(xq_name6), 32 },
+{ PSF(xq_name7), 32 },
+{ PSF(xq_name8), 32 },
+
+{ PSF(xq_maxhp), 32 },
+{ PSF(xq_maxmana), 32 },
+{ PSF(xq_maxendurance), 32 },
+{ PSF(xq_maxenergy), 32 },
+{ PSF(xq_hpperc), 32 },
+{ PSF(xq_xpperc), 32 },
+{ PSF(xq_endurance), 32 },
+{ PSF(xq_mana), 32 },
+
+{ PSF(xq_secondary_weapon), 8 },
+
+{ PSF(xq_falling_height), 32},
+
+{ PSF(xq_spellbook_page), 32},
+{ PSF(xq_spellbook_slot_1), 32},
+{ PSF(xq_spellbook_slot_2), 32},
+{ PSF(xq_spellbook_slot_3), 32},
+{ PSF(xq_spellbook_slot_4), 32},
+{ PSF(xq_spellbook_slot_5), 32},
+{ PSF(xq_spellbook_slot_6), 32},
+
+{ PSF(xq_copper), 32 },
+{ PSF(xq_silver), 32 },
+{ PSF(xq_gold), 32 },
+{ PSF(xq_platinum), 32 },
+
+{ PSF(xq_weapon_delay_1), 32},
+{ PSF(xq_weapon_spread), 32},
+{ PSF(xq_weapon_projectiles), 32},
+{ PSF(xq_weapon_range), 32},
+{ PSF(xq_weapon_energycost), 32},
+
+{ PSF(xq_inv_primary1_1), 32 },
+{ PSF(xq_inv_primary1_2), 32 },
+{ PSF(xq_inv_secondary1_1), 32 },
+{ PSF(xq_inv_secondary1_2), 32 },
+{ PSF(xq_inv_primary2_1), 32 },
+{ PSF(xq_inv_primary2_2), 32 },
+{ PSF(xq_inv_primary3_1), 32 },
+{ PSF(xq_inv_primary3_2), 32 },
+{ PSF(xq_inv_primary4_1), 32 },
+{ PSF(xq_inv_primary4_2), 32 },
+{ PSF(xq_inv_primary5_1), 32 },
+{ PSF(xq_inv_primary5_2), 32 },
+{ PSF(xq_inv_primary6_1), 32 },
+{ PSF(xq_inv_primary6_2), 32 },
+{ PSF(xq_inv_primary7_1), 32 },
+{ PSF(xq_inv_primary7_2), 32 },
+{ PSF(xq_inv_primary8_1), 32 },
+{ PSF(xq_inv_primary8_2), 32 },
+{ PSF(xq_inv_primary9_1), 32 },
+{ PSF(xq_inv_primary9_2), 32 },
+
+{ PSF(xq_inv_leftear_1), 32},
+{ PSF(xq_inv_leftear_2), 32},
+{ PSF(xq_inv_rightear_1), 32},
+{ PSF(xq_inv_rightear_2), 32},
+{ PSF(xq_inv_head_1), 32},
+{ PSF(xq_inv_head_2), 32},
+{ PSF(xq_inv_face_1), 32},
+{ PSF(xq_inv_face_2), 32},
+{ PSF(xq_inv_chest_1), 32},
+{ PSF(xq_inv_chest_2), 32},
+{ PSF(xq_inv_arms_1), 32},
+{ PSF(xq_inv_arms_2), 32},
+{ PSF(xq_inv_waist_1), 32},
+{ PSF(xq_inv_waist_2), 32},
+{ PSF(xq_inv_leftwrist_1), 32},
+{ PSF(xq_inv_leftwrist_2), 32},
+{ PSF(xq_inv_rightwrist_1), 32},
+{ PSF(xq_inv_rightwrist_2), 32},
+{ PSF(xq_inv_legs_1), 32},
+{ PSF(xq_inv_legs_2), 32},
+{ PSF(xq_inv_hands_1), 32},
+{ PSF(xq_inv_hands_2), 32},
+{ PSF(xq_inv_feet_1), 32},
+{ PSF(xq_inv_feet_2), 32},
+{ PSF(xq_inv_shoulders_1), 32},
+{ PSF(xq_inv_shoulders_2), 32},
+{ PSF(xq_inv_back_1), 32},
+{ PSF(xq_inv_back_2), 32},
+{ PSF(xq_inv_neck_1), 32},
+{ PSF(xq_inv_neck_2), 32},
+{ PSF(xq_inv_leftfinger_1), 32},
+{ PSF(xq_inv_leftfinger_2), 32},
+{ PSF(xq_inv_rightfinger_1), 32},
+{ PSF(xq_inv_rightfinger_2), 32},
+{ PSF(xq_inv_mouse1_1), 32},
+{ PSF(xq_inv_mouse1_2), 32},
+
+{ PSF(xq_inv_carry1_1), 32},
+{ PSF(xq_inv_carry1_2), 32},
+{ PSF(xq_inv_carry2_1), 32},
+{ PSF(xq_inv_carry2_2), 32},
+{ PSF(xq_inv_carry3_1), 32},
+{ PSF(xq_inv_carry3_2), 32},
+{ PSF(xq_inv_carry4_1), 32},
+{ PSF(xq_inv_carry4_2), 32},
+{ PSF(xq_inv_carry5_1), 32},
+{ PSF(xq_inv_carry5_2), 32},
+{ PSF(xq_inv_carry6_1), 32},
+{ PSF(xq_inv_carry6_2), 32},
+
+{ PSF(xq_mouse_money_type), 8},
+{ PSF(xq_mouse_money_amount), 32},
+
+{ PSF(xq_loot_slot_1_1), 32},
+{ PSF(xq_loot_slot_1_2), 32},
+{ PSF(xq_loot_slot_2_1), 32},
+{ PSF(xq_loot_slot_2_2), 32},
+{ PSF(xq_loot_slot_3_1), 32},
+{ PSF(xq_loot_slot_3_2), 32},
+{ PSF(xq_loot_slot_4_1), 32},
+{ PSF(xq_loot_slot_4_2), 32},
+{ PSF(xq_loot_slot_5_1), 32},
+{ PSF(xq_loot_slot_5_2), 32},
+{ PSF(xq_loot_slot_6_1), 32},
+{ PSF(xq_loot_slot_6_2), 32},
+{ PSF(xq_loot_slot_7_1), 32},
+{ PSF(xq_loot_slot_7_2), 32},
+{ PSF(xq_loot_slot_8_1), 32},
+{ PSF(xq_loot_slot_8_2), 32},
+{ PSF(xq_loot_slot_9_1), 32},
+{ PSF(xq_loot_slot_9_2), 32},
+{ PSF(xq_loot_slot_10_1), 32},
+{ PSF(xq_loot_slot_10_2), 32},
+{ PSF(xq_loot_slot_11_1), 32},
+{ PSF(xq_loot_slot_11_2), 32},
+{ PSF(xq_loot_slot_12_1), 32},
+{ PSF(xq_loot_slot_12_2), 32},
+{ PSF(xq_loot_slot_13_1), 32},
+{ PSF(xq_loot_slot_13_2), 32},
+{ PSF(xq_loot_slot_14_1), 32},
+{ PSF(xq_loot_slot_14_2), 32},
+{ PSF(xq_loot_slot_15_1), 32},
+{ PSF(xq_loot_slot_15_2), 32},
+{ PSF(xq_loot_slot_16_1), 32},
+{ PSF(xq_loot_slot_16_2), 32},
+{ PSF(xq_loot_slot_17_1), 32},
+{ PSF(xq_loot_slot_17_2), 32},
+{ PSF(xq_loot_slot_18_1), 32},
+{ PSF(xq_loot_slot_18_2), 32},
+{ PSF(xq_loot_slot_19_1), 32},
+{ PSF(xq_loot_slot_19_2), 32},
+{ PSF(xq_loot_slot_20_1), 32},
+{ PSF(xq_loot_slot_20_2), 32},
+{ PSF(xq_loot_slot_21_1), 32},
+{ PSF(xq_loot_slot_21_2), 32},
+{ PSF(xq_loot_slot_22_1), 32},
+{ PSF(xq_loot_slot_22_2), 32},
+{ PSF(xq_loot_slot_23_1), 32},
+{ PSF(xq_loot_slot_23_2), 32},
+{ PSF(xq_loot_slot_24_1), 32},
+{ PSF(xq_loot_slot_24_2), 32},
+{ PSF(xq_loot_slot_25_1), 32},
+{ PSF(xq_loot_slot_25_2), 32},
+{ PSF(xq_loot_slot_26_1), 32},
+{ PSF(xq_loot_slot_26_2), 32},
+{ PSF(xq_loot_slot_27_1), 32},
+{ PSF(xq_loot_slot_27_2), 32},
+{ PSF(xq_loot_slot_28_1), 32},
+{ PSF(xq_loot_slot_28_2), 32},
+{ PSF(xq_loot_slot_29_1), 32},
+{ PSF(xq_loot_slot_29_2), 32},
+{ PSF(xq_loot_slot_30_1), 32},
+{ PSF(xq_loot_slot_30_2), 32},
+{ PSF(xq_loot_slot_31_1), 32},
+{ PSF(xq_loot_slot_31_2), 32},
+{ PSF(xq_loot_slot_32_1), 32},
+{ PSF(xq_loot_slot_32_2), 32},
+{ PSF(xq_loot_slot_33_1), 32},
+{ PSF(xq_loot_slot_33_2), 32},
+{ PSF(xq_loot_slot_34_1), 32},
+{ PSF(xq_loot_slot_34_2), 32},
+{ PSF(xq_loot_slot_35_1), 32},
+{ PSF(xq_loot_slot_35_2), 32},
+{ PSF(xq_loot_slot_36_1), 32},
+{ PSF(xq_loot_slot_36_2), 32},
+{ PSF(xq_loot_slot_37_1), 32},
+{ PSF(xq_loot_slot_37_2), 32},
+{ PSF(xq_loot_slot_38_1), 32},
+{ PSF(xq_loot_slot_38_2), 32},
+{ PSF(xq_loot_slot_39_1), 32},
+{ PSF(xq_loot_slot_39_2), 32},
+{ PSF(xq_loot_slot_40_1), 32},
+{ PSF(xq_loot_slot_40_2), 32},
+{ PSF(xq_loot_slot_41_1), 32},
+{ PSF(xq_loot_slot_41_2), 32},
+{ PSF(xq_loot_slot_42_1), 32},
+{ PSF(xq_loot_slot_42_2), 32},
+{ PSF(xq_loot_slot_43_1), 32},
+{ PSF(xq_loot_slot_43_2), 32},
+{ PSF(xq_loot_slot_44_1), 32},
+{ PSF(xq_loot_slot_44_2), 32},
+{ PSF(xq_loot_slot_45_1), 32},
+{ PSF(xq_loot_slot_45_2), 32},
+
+{ PSF(xq_bank_slot_1_1), 32},
+{ PSF(xq_bank_slot_1_2), 32},
+{ PSF(xq_bank_slot_2_1), 32},
+{ PSF(xq_bank_slot_2_2), 32},
+{ PSF(xq_bank_slot_3_1), 32},
+{ PSF(xq_bank_slot_3_2), 32},
+{ PSF(xq_bank_slot_4_1), 32},
+{ PSF(xq_bank_slot_4_2), 32},
+{ PSF(xq_bank_copper), 32},
+{ PSF(xq_bank_silver), 32},
+{ PSF(xq_bank_gold), 32},
+{ PSF(xq_bank_platinum), 32},
+
+{ PSF(xq_merchant_slot_1_1), 32},
+{ PSF(xq_merchant_slot_1_2), 32},
+{ PSF(xq_merchant_slot_2_1), 32},
+{ PSF(xq_merchant_slot_2_2), 32},
+{ PSF(xq_merchant_slot_3_1), 32},
+{ PSF(xq_merchant_slot_3_2), 32},
+{ PSF(xq_merchant_slot_4_1), 32},
+{ PSF(xq_merchant_slot_4_2), 32},
+{ PSF(xq_merchant_slot_5_1), 32},
+{ PSF(xq_merchant_slot_5_2), 32},
+{ PSF(xq_merchant_slot_6_1), 32},
+{ PSF(xq_merchant_slot_6_2), 32},
+{ PSF(xq_merchant_slot_7_1), 32},
+{ PSF(xq_merchant_slot_7_2), 32},
+{ PSF(xq_merchant_slot_8_1), 32},
+{ PSF(xq_merchant_slot_8_2), 32},
+{ PSF(xq_merchant_slot_9_1), 32},
+{ PSF(xq_merchant_slot_9_2), 32},
+{ PSF(xq_merchant_slot_10_1), 32},
+{ PSF(xq_merchant_slot_10_2), 32},
+{ PSF(xq_merchant_slot_11_1), 32},
+{ PSF(xq_merchant_slot_11_2), 32},
+{ PSF(xq_merchant_slot_12_1), 32},
+{ PSF(xq_merchant_slot_12_2), 32},
+{ PSF(xq_merchant_slot_13_1), 32},
+{ PSF(xq_merchant_slot_13_2), 32},
+{ PSF(xq_merchant_slot_14_1), 32},
+{ PSF(xq_merchant_slot_14_2), 32},
+{ PSF(xq_merchant_slot_15_1), 32},
+{ PSF(xq_merchant_slot_15_2), 32},
+{ PSF(xq_merchant_slot_16_1), 32},
+{ PSF(xq_merchant_slot_16_2), 32},
+{ PSF(xq_merchant_slot_17_1), 32},
+{ PSF(xq_merchant_slot_17_2), 32},
+{ PSF(xq_merchant_slot_18_1), 32},
+{ PSF(xq_merchant_slot_18_2), 32},
+{ PSF(xq_merchant_slot_19_1), 32},
+{ PSF(xq_merchant_slot_19_2), 32},
+{ PSF(xq_merchant_slot_20_1), 32},
+{ PSF(xq_merchant_slot_20_2), 32},
+
+{ PSF(xq_trading_me_agree), 32},
+{ PSF(xq_trading_them_agree), 32},
+
+{ PSF(xq_give_slot_1_1), 32},
+{ PSF(xq_give_slot_1_2), 32},
+{ PSF(xq_give_slot_2_1), 32},
+{ PSF(xq_give_slot_2_2), 32},
+{ PSF(xq_give_slot_3_1), 32},
+{ PSF(xq_give_slot_3_2), 32},
+{ PSF(xq_give_slot_4_1), 32},
+{ PSF(xq_give_slot_4_2), 32},
+
+{ PSF(xq_receive_slot_1_1), 32},
+{ PSF(xq_receive_slot_1_2), 32},
+{ PSF(xq_receive_slot_2_1), 32},
+{ PSF(xq_receive_slot_2_2), 32},
+{ PSF(xq_receive_slot_3_1), 32},
+{ PSF(xq_receive_slot_3_2), 32},
+{ PSF(xq_receive_slot_4_1), 32},
+{ PSF(xq_receive_slot_4_2), 32},
+
+{ PSF(xq_give_copper), 32},
+{ PSF(xq_give_silver), 32},
+{ PSF(xq_give_gold), 32},
+{ PSF(xq_give_platinum), 32},
+
+{ PSF(xq_receive_copper), 32},
+{ PSF(xq_receive_silver), 32},
+{ PSF(xq_receive_gold), 32},
+{ PSF(xq_receive_platinum), 32},
+
+
+{ PSF(xq_generic_name1), 32},
+{ PSF(xq_generic_name2), 32},
+{ PSF(xq_generic_name3), 32},
+{ PSF(xq_generic_name4), 32},
+{ PSF(xq_generic_name5), 32},
+
+{ PSF(xq_group_member1_name1), 32},
+{ PSF(xq_group_member1_name2), 32},
+{ PSF(xq_group_member1_name3), 32},
+{ PSF(xq_group_member1_name4), 32},
+{ PSF(xq_group_member1_name5), 32},
+
+{ PSF(xq_group_member2_name1), 32},
+{ PSF(xq_group_member2_name2), 32},
+{ PSF(xq_group_member2_name3), 32},
+{ PSF(xq_group_member2_name4), 32},
+{ PSF(xq_group_member2_name5), 32},
+
+{ PSF(xq_group_member3_name1), 32},
+{ PSF(xq_group_member3_name2), 32},
+{ PSF(xq_group_member3_name3), 32},
+{ PSF(xq_group_member3_name4), 32},
+{ PSF(xq_group_member3_name5), 32},
+
+{ PSF(xq_group_member4_name1), 32},
+{ PSF(xq_group_member4_name2), 32},
+{ PSF(xq_group_member4_name3), 32},
+{ PSF(xq_group_member4_name4), 32},
+{ PSF(xq_group_member4_name5), 32},
+
+{ PSF(xq_group_member5_name1), 32},
+{ PSF(xq_group_member5_name2), 32},
+{ PSF(xq_group_member5_name3), 32},
+{ PSF(xq_group_member5_name4), 32},
+{ PSF(xq_group_member5_name5), 32},
+
+{ PSF(xq_group_member1_hp_perc), 32},
+{ PSF(xq_group_member2_hp_perc), 32},
+{ PSF(xq_group_member3_hp_perc), 32},
+{ PSF(xq_group_member4_hp_perc), 32},
+{ PSF(xq_group_member5_hp_perc), 32},
+
+{ PSF(xq_group_leader), 32},
+
+{ PSF(xq_str), 32},
+{ PSF(xq_weight), 32},
+{ PSF(xq_weight_max), 32},
+
+{ PSF(xq_mr), 32},
+{ PSF(xq_fr), 32},
+{ PSF(xq_cr), 32},
+{ PSF(xq_pr), 32},
+{ PSF(xq_dr), 32},
+{ PSF(xq_psr), 32},
+
+{ PSF(xq_speed), 16},
+{ PSF(xq_level), 8},
+{ PSF(xq_jump_velocity), 32},
+{ PSF(xq_spell_mod_speed_perc), 32},
+{ PSF(xq_looting), 8},
+{ PSF(xq_sitting), 8},
+
+{ PSF(xq_arena_kills), 32},
+{ PSF(xq_arena_deaths), 32},
+{ PSF(xq_ping), 32},
+{ PSF(xq_time), 32},
+
+{ PSF(xq_skill_capups), 32},
+{ PSF(xq_skill_tailoring), 32},
+{ PSF(xq_skill_tailoring_cap), 32},
+{ PSF(xq_skill_cooking), 32},
+{ PSF(xq_skill_cooking_cap), 32},
+{ PSF(xq_skill_blacksmithing), 32},
+{ PSF(xq_skill_blacksmithing_cap), 32},
+{ PSF(xq_skill_swimming), 32},
+{ PSF(xq_skill_swimming_cap), 32},
+{ PSF(xq_skill_channelling), 32},
+{ PSF(xq_skill_channelling_cap), 32},
+
+{ PSF(xq_skill_melee), 32},
+{ PSF(xq_skill_melee_cap), 32},
+{ PSF(xq_skill_fire), 32},
+{ PSF(xq_skill_fire_cap), 32},
+{ PSF(xq_skill_cold), 32},
+{ PSF(xq_skill_cold_cap), 32},
+{ PSF(xq_skill_poison), 32},
+{ PSF(xq_skill_poison_cap), 32},
+{ PSF(xq_skill_disease), 32},
+{ PSF(xq_skill_disease_cap), 32},
+{ PSF(xq_skill_psy), 32},
+{ PSF(xq_skill_psy_cap), 32},
+{ PSF(xq_skill_h2h), 32},
+{ PSF(xq_skill_h2h_cap), 32},
+{ PSF(xq_skill_w2), 32},
+{ PSF(xq_skill_w2_cap), 32},
+{ PSF(xq_skill_w3), 32},
+{ PSF(xq_skill_w3_cap), 32},
+{ PSF(xq_skill_w4), 32},
+{ PSF(xq_skill_w4_cap), 32},
+{ PSF(xq_skill_w5), 32},
+{ PSF(xq_skill_w5_cap), 32},
+{ PSF(xq_skill_w6), 32},
+{ PSF(xq_skill_w6_cap), 32},
+{ PSF(xq_skill_w7), 32},
+{ PSF(xq_skill_w7_cap), 32},
+{ PSF(xq_skill_w8), 32},
+{ PSF(xq_skill_w8_cap), 32},
+{ PSF(xq_skill_w9), 32},
+{ PSF(xq_skill_w9_cap), 32},
+
+{ PSF(xq_casting), 8},
+{ PSF(xq_casting_sound), 8},
+{ PSF(xq_pfx_received), 32},
+{ PSF(xq_pfx_received_sound), 32},
+{ PSF(xq_casting_hash), 32},
+{ PSF(xq_casting_time), 32},
+{ PSF(xq_casting_down), 32},
+
+{ PSF(xq_spell_slot_1), 32},
+{ PSF(xq_spell_slot_1_down), 32},
+{ PSF(xq_spell_slot_2), 32},
+{ PSF(xq_spell_slot_2_down), 32},
+{ PSF(xq_spell_slot_3), 32},
+{ PSF(xq_spell_slot_3_down), 32},
+{ PSF(xq_spell_slot_4), 32},
+{ PSF(xq_spell_slot_4_down), 32},
+{ PSF(xq_spell_slot_5), 32},
+{ PSF(xq_spell_slot_5_down), 32},
+{ PSF(xq_spell_slot_6), 32},
+{ PSF(xq_spell_slot_6_down), 32},
+
+{ PSF(xq_spfx_1), 32},
+{ PSF(xq_spfx_2), 32},
+{ PSF(xq_spfx_3), 32},
+{ PSF(xq_spfx_4), 32},
+{ PSF(xq_spfx_5), 32},
+{ PSF(xq_spfx_6), 32},
+{ PSF(xq_spfx_7), 32},
+{ PSF(xq_spfx_8), 32},
+{ PSF(xq_spfx_9), 32},
+{ PSF(xq_spfx_10), 32},
+{ PSF(xq_spfx_1_hash), 32},
+{ PSF(xq_spfx_2_hash), 32},
+{ PSF(xq_spfx_3_hash), 32},
+{ PSF(xq_spfx_4_hash), 32},
+{ PSF(xq_spfx_5_hash), 32},
+{ PSF(xq_spfx_6_hash), 32},
+{ PSF(xq_spfx_7_hash), 32},
+{ PSF(xq_spfx_8_hash), 32},
+{ PSF(xq_spfx_9_hash), 32},
+{ PSF(xq_spfx_10_hash), 32},
+{ PSF(xq_spfx_1_remain), 32},
+{ PSF(xq_spfx_2_remain), 32},
+{ PSF(xq_spfx_3_remain), 32},
+{ PSF(xq_spfx_4_remain), 32},
+{ PSF(xq_spfx_5_remain), 32},
+{ PSF(xq_spfx_6_remain), 32},
+{ PSF(xq_spfx_7_remain), 32},
+{ PSF(xq_spfx_8_remain), 32},
+{ PSF(xq_spfx_9_remain), 32},
+{ PSF(xq_spfx_10_remain), 32},
+
+{ PSF(xq_flags), 32},
+{ PSF(xq_invis), 8},
+
+{ PSF(xq_rez_author_1), 32},
+{ PSF(xq_rez_author_2), 32},
+{ PSF(xq_rez_author_3), 32},
+{ PSF(xq_rez_author_4), 32},
+{ PSF(xq_rez_author_5), 32},
+{ PSF(xq_rez_perc), 32},
+
+{ PSF(xq_ac), 32},
+{ PSF(xq_atk), 32},
+
+{ PSF(xq_app_model), 16},
+{ PSF(xq_app_model_scale), 16},
+{ PSF(xq_app_texture_num_legs), 32},
+{ PSF(xq_app_texture_num_torso), 32},
+{ PSF(xq_app_texture_num_head), 32},
+{ PSF(xq_app_texture_num_feet), 32},
+{ PSF(xq_app_texture_num_arms), 32},
+{ PSF(xq_app_texture_num_leftwrist), 32},
+{ PSF(xq_app_texture_num_rightwrist), 32},
+{ PSF(xq_app_texture_num_hands), 32},
+{ PSF(xq_app_held_primary_model), 32},
+{ PSF(xq_app_held_secondary_model), 32},
+{ PSF(xq_mysolid), 32},
+{ PSF(xq_client_anim), 32},
+{ PSF(xq_class), 32},
+{ PSF(xq_race), 32},
+
+{ PSF(xq_last_bard_song_success), 32},
+
+// XXX -xqx
 { PSF(loopSound), 16 }
 };
 
@@ -1145,7 +1722,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 		}
 	}
 
-	MSG_WriteByte( msg, lc );	// # of changes
+	MSG_WriteShort( msg, lc );	// # of changes // XXX xqx changed WriteByte to WriteShort
 
 	oldsize += numFields - lc;
 
@@ -1301,7 +1878,7 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 	}
 
 	numFields = ARRAY_LEN( playerStateFields );
-	lc = MSG_ReadByte(msg);
+	lc = MSG_ReadShort(msg); // XXX xqx changed ReadByte to ReadShort
 
 	if ( lc > numFields || lc < 0 ) {
 		Com_Error( ERR_DROP, "invalid playerState field count" );

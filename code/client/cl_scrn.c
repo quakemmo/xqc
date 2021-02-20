@@ -48,6 +48,215 @@ void SCR_DrawNamedPic( float x, float y, float width, float height, const char *
 	re.DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
+// XXX xqx
+void xq_SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape ) {
+	vec4_t		color;
+	const char	*s;
+	int			xx;
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	re.SetColor( setColor );
+	while ( *s ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				re.SetColor( color );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+		xq_SCR_DrawSmallChar( xx, y, *s );
+		xx += SMALLCHAR_WIDTH;
+		s++;
+	}
+	re.SetColor( NULL );
+}
+void xq_SCR_DrawTinyStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape ) {
+	vec4_t		color;
+	const char	*s;
+	int			xx;
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	re.SetColor( setColor );
+	while ( *s ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				re.SetColor( color );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+		xq_SCR_DrawTinyChar( xx, y, *s );
+		xx += TINYCHAR_WIDTH;
+		s++;
+	}
+	re.SetColor( NULL );
+}
+void xq_SCR_DrawChar( int x, int y, int width, int height, int ch ) {
+
+    int row, col;
+    float frow, fcol;
+    float size;
+    float   ax, ay, aw, ah;
+
+    ch &= 255;
+
+    if ( ch == ' ' ) {
+        return;
+    }
+
+    ax = x;
+    ay = y;
+    aw = width;
+    ah = height;
+    //CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+    row = ch>>4;
+    col = ch&15;
+
+    frow = row*0.0625;
+    fcol = col*0.0625;
+    size = 0.0625;
+
+    re.DrawStretchPic( ax, ay, aw, ah,
+                       fcol, frow,
+                       fcol + size, frow + size,
+                       cls.charSetShader );
+}
+void xq_SCR_DrawSmallChar( int x, int y, int ch ) {
+	int row, col;
+	float frow, fcol;
+	float size;
+
+	if (ch == 30) {
+		ch = '%';
+	}
+
+	ch &= 255;
+
+	if ( ch == ' ' ) {
+		return;
+	}
+
+	if ( y < -SMALLCHAR_HEIGHT ) {
+		return;
+	}
+
+	row = ch>>4;
+	col = ch&15;
+
+	frow = row*0.0625;
+	fcol = col*0.0625;
+	size = 0.0625;
+
+	re.DrawStretchPic( x, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT,
+					   fcol, frow, 
+					   fcol + size, frow + size, 
+					   cls.charSetShader );
+}
+void xq_SCR_DrawTinyChar( int x, int y, int ch ) {
+	int row, col;
+	float frow, fcol;
+	float size;
+
+	if (ch == 30) {
+		ch = '%';
+	}
+
+	ch &= 255;
+
+	if ( ch == ' ' ) {
+		return;
+	}
+
+	if ( y < -TINYCHAR_HEIGHT ) {
+		return;
+	}
+
+	row = ch>>4;
+	col = ch&15;
+
+	frow = row*0.0625;
+	fcol = col*0.0625;
+	size = 0.0625;
+
+	re.DrawStretchPic( x, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT,
+					   fcol, frow, 
+					   fcol + size, frow + size, 
+					   cls.charSetShader );
+}
+static void draw_assymetric_string( int x, int y, float sizew, float sizeh, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape ) {
+	vec4_t		color;
+	const char	*s;
+	int			xx;
+
+	// draw the drop shadow
+	color[0] = color[1] = color[2] = 0;
+	color[3] = setColor[3];
+	re.SetColor( color );
+	s = string;
+	xx = x;
+	while ( *s ) {
+		if ( !noColorEscape && Q_IsColorString( s ) ) {
+			s += 2;
+			continue;
+		}
+		xq_SCR_DrawChar( xx+2, y+2, sizew, sizeh, *s );
+		xx += sizew;
+		s++;
+	}
+
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	re.SetColor( setColor );
+	while ( *s ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				re.SetColor( color );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+		xq_SCR_DrawChar( xx, y, sizew, sizeh, *s );
+		xx += sizew;
+		s++;
+	}
+	re.SetColor( NULL );
+}
+void xq_SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape ) {
+	draw_assymetric_string(x, y, size, size, string, setColor, forceColor, noColorEscape);
+}
+void xq_SCR_DrawStringExtAssymetric( int x, int y, float sizew, float sizeh, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape ) {
+	draw_assymetric_string(x, y, sizew, sizeh, string, setColor, forceColor, noColorEscape);
+}
+void xq_SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	xq_SCR_DrawStringExt( x, y, BIGCHAR_WIDTH, s, color, qfalse, noColorEscape );
+}
+void xq_SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape ) {
+	xq_SCR_DrawStringExt( x, y, BIGCHAR_WIDTH, s, color, qtrue, noColorEscape );
+}
+// XXX -xqx
 
 /*
 ================
@@ -540,7 +749,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// console draws next
-	Con_DrawConsole ();
+// XXX xqx
+	Con_DrawConsole (0);
+// XXX -xqx
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {

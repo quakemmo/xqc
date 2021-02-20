@@ -1029,6 +1029,33 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+// XXX xqx
+	if (!strcmp(cmd, "xqlog") ) {
+		xq_serverlog(CG_Argv(1));
+		return;
+	}
+	if (!strcmp(cmd, "xq_clear_item_cache")) {
+		xq_CacheClear(XQ_ITEM, S64(CG_Argv(1)), 0, 0, 0);
+		xq_CmdCookie_Add(atoi(CG_Argv(2)));
+		return;
+	}
+	if (!strcmp(cmd, "xq_refresh_all_items")) {
+		xq_RefreshAllItems();
+		xq_CmdCookie_Add(atoi(CG_Argv(1)));
+		return;
+	}
+	if (!strcmp(cmd, "xqset")) {
+		snprintf(text, MAX_SAY_TEXT, "%s", CG_Argv(1));
+		char *xqtmp = strchr(text, '!');
+		if (xqtmp) {
+			*xqtmp++ = 0;
+			trap_SendConsoleCommand(va("set %s \"%s\"\n", text, xqtmp));
+		}
+		return;
+	}
+// XXX -xqx
+
+
 	if ( !strcmp( cmd, "tchat" ) ) {
 		trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
 		Q_strncpyz( text, CG_Argv(1), MAX_SAY_TEXT );
@@ -1064,6 +1091,14 @@ static void CG_ServerCommand( void ) {
 		CG_ParseTeamInfo();
 		return;
 	}
+
+// XXX xqx
+	if (!strcmp( cmd, "connect")) {
+		trap_SendConsoleCommand(va("connect %s\n", CG_Argv(1)));
+		return;
+	}
+// XXX -xqx
+
 
 	if ( !strcmp( cmd, "map_restart" ) ) {
 		CG_MapRestart();

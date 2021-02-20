@@ -23,28 +23,30 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __Q_SHARED_H
 #define __Q_SHARED_H
 
+#define STANDALONE 1
+
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
 #ifdef STANDALONE
-  #define PRODUCT_NAME				"iofoo3"
-  #define BASEGAME					"foobar"
-  #define CLIENT_WINDOW_TITLE		"changeme"
-  #define CLIENT_WINDOW_MIN_TITLE	"changeme2"
-  #define HOMEPATH_NAME_UNIX		".foo"
-  #define HOMEPATH_NAME_WIN			"FooBar"
+  #define PRODUCT_NAME				"xq"
+  #define BASEGAME					"xq"
+  #define CLIENT_WINDOW_TITLE     	"xquake"
+  #define CLIENT_WINDOW_MIN_TITLE 	"xquake"
+  #define HOMEPATH_NAME_UNIX		"xquake"
+  #define HOMEPATH_NAME_WIN			"xquake"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-//  #define STEAMPATH_NAME			"Foo Bar"
+//  #define STEAMPATH_NAME                     "Foo Bar"
 //  #define STEAMPATH_APPID         ""
-  #define GAMENAME_FOR_MASTER		"foobar"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"xquake"	// must NOT contain whitespace
   #define CINEMATICS_LOGO		"foologo.roq"
   #define CINEMATICS_INTRO		"intro.roq"
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 #else
   #define PRODUCT_NAME				"ioq3"
   #define BASEGAME					"baseq3"
-  #define CLIENT_WINDOW_TITLE		"ioquake3"
-  #define CLIENT_WINDOW_MIN_TITLE	"ioq3"
+  #define CLIENT_WINDOW_TITLE     	"ioquake3"
+  #define CLIENT_WINDOW_MIN_TITLE 	"ioq3"
   #define HOMEPATH_NAME_UNIX		".q3a"
   #define HOMEPATH_NAME_WIN			"Quake3"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
@@ -56,6 +58,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define CINEMATICS_INTRO		"intro.RoQ"
   #define LEGACY_PROTOCOL
 #endif
+
+// XXX xqx
+#ifdef XQ_SHORTNAME
+	#undef BASEGAME
+	#define BASEGAME XQ_SHORTNAME
+	#undef PRODUCT_NAME
+	#define PRODUCT_NAME XQ_SHORTNAME
+
+	#undef CLIENT_WINDOW_TITLE
+	#define CLIENT_WINDOW_TITLE XQ_LONGNAME
+	#undef CLIENT_WINDOW_MIN_TITLE
+	#define CLIENT_WINDOW_MIN_TITLE XQ_LONGNAME
+	#undef HOMEPATH_NAME_UNIX
+	#define HOMEPATH_NAME_UNIX XQ_LONGNAME
+	#undef HOMEPATH_NAME_WIN
+	#define HOMEPATH_NAME_WIN XQ_LONGNAME
+	#undef HOMEPATH_NAME_MACOSX
+  	#define HOMEPATH_NAME_MACOSX XQ_LONGNAME
+	#undef GAMENAME_FOR_MASTER
+  	#define GAMENAME_FOR_MASTER XQ_LONGNAME
+#endif
+// XXX -xqx
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
@@ -121,7 +145,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define UNUSED_VAR
 #endif
 
-#if (defined _MSC_VER)
+#if (defined _MSC_VER) || (defined __MINGW64__) // XXX xqx added __MINGW64__
 #define Q_EXPORT __declspec(dllexport)
 #elif (defined __SUNPRO_C)
 #define Q_EXPORT __global
@@ -165,6 +189,9 @@ typedef int intptr_t;
 #include <time.h>
 #include <ctype.h>
 #include <limits.h>
+// XXX xqx
+#include <inttypes.h>
+// XXX -xqx
 
 #ifdef _MSC_VER
   #include <io.h>
@@ -243,9 +270,9 @@ typedef int		clipHandle_t;
 
 // the game guarantees that no string from the network will ever
 // exceed MAX_STRING_CHARS
-#define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
-#define	MAX_STRING_TOKENS	1024	// max tokens resulting from Cmd_TokenizeString
-#define	MAX_TOKEN_CHARS		1024	// max length of an individual token
+#define	MAX_STRING_CHARS	4096	// max length of a string passed to Cmd_TokenizeString
+#define	MAX_STRING_TOKENS	4096	// max tokens resulting from Cmd_TokenizeString
+#define	MAX_TOKEN_CHARS		4096	// max length of an individual token
 
 #define	MAX_INFO_STRING		1024
 #define	MAX_INFO_KEY		  1024
@@ -286,6 +313,7 @@ typedef enum {
 typedef enum {
 	PRINT_ALL,
 	PRINT_DEVELOPER,		// only print when "developer 1"
+	PRINT_DEVELOPER_WHITE,	// only print when "developer 1" - white color.  // XXX xqx added this
 	PRINT_WARNING,
 	PRINT_ERROR
 } printParm_t;
@@ -421,6 +449,10 @@ qboolean Q_IsColorString(const char *p);  // ^[0-9a-zA-Z]
 #define COLOR_CYAN	'5'
 #define COLOR_MAGENTA	'6'
 #define COLOR_WHITE	'7'
+// XXX xqx flags for xqlog server command in addition to the color
+#define XQ_CLOG_EMPHASIZE		1 << 8
+#define XQ_CLOG_EMPHASIZE_ONLY	1 << 9
+// XXX -xqx
 #define ColorIndexForNumber(c) ((c) & 0x07)
 #define ColorIndex(c) (ColorIndexForNumber((c) - '0'))
 
@@ -754,6 +786,12 @@ void	COM_ParseError( char *format, ... ) __attribute__ ((format (printf, 1, 2)))
 void	COM_ParseWarning( char *format, ... ) __attribute__ ((format (printf, 1, 2)));
 //int		COM_ParseInfos( char *buf, int max, char infos[][MAX_INFO_STRING] );
 
+// XXX xqx
+int64_t S64(const char *s);
+int S64_1(uint64_t i);
+int S64_2(uint64_t i);
+// XXX -xqx
+
 #define MAX_TOKENLENGTH		1024
 
 #ifndef TT_STRING
@@ -937,6 +975,7 @@ struct cvar_s {
 	int				modificationCount;	// incremented each time the cvar is changed
 	float			value;				// atof( string )
 	int				integer;			// atoi( string )
+	int64_t			int64;				// S64(string) XXX xqx
 	qboolean	validate;
 	qboolean	integral;
 	float			min;
@@ -949,8 +988,9 @@ struct cvar_s {
 	cvar_t *hashPrev;
 	int			hashIndex;
 };
+#define XQ_SESSION_LEN 32 // XXX xqx
 
-#define	MAX_CVAR_VALUE_STRING	256
+#define	MAX_CVAR_VALUE_STRING	1024
 
 typedef int	cvarHandle_t;
 
@@ -1091,10 +1131,10 @@ typedef enum {
 //
 // per-level limits
 //
-#define	MAX_CLIENTS			64		// absolute limit
+#define	MAX_CLIENTS			8		// absolute limit // XXX xqx temporarily at 8 to save memory on VPS
 #define MAX_LOCATIONS		64
 
-#define	GENTITYNUM_BITS		10		// don't need to send any more
+#define	GENTITYNUM_BITS		10		// don't need to send any more // XXX xqx changed from 10 to 11 (temp to 9 to save memory on VPS)
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
 
 // entitynums are communicated with GENTITY_BITS, so any reserved
@@ -1109,7 +1149,7 @@ typedef enum {
 #define	MAX_SOUNDS			256		// so they cannot be blindly increased
 
 
-#define	MAX_CONFIGSTRINGS	1024
+#define	MAX_CONFIGSTRINGS	1700
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication
@@ -1125,6 +1165,7 @@ typedef struct {
 	int			dataCount;
 } gameState_t;
 
+
 //=========================================================
 
 // bit field limits
@@ -1136,6 +1177,10 @@ typedef struct {
 #define	MAX_PS_EVENTS			2
 
 #define PS_PMOVEFRAMECOUNTBITS	6
+// XXX xqx
+#define XQ64(x,y) ((uint64_t)x << 32 | (((uint64_t)y) & ~0xffffffff00000000))
+
+// XXX -xqx
 
 // playerState_t is the information needed by both the client and server
 // to predict player motion and actions
@@ -1208,6 +1253,511 @@ typedef struct playerState_s {
 	int			generic1;
 	int			loopSound;
 	int			jumppad_ent;	// jumppad entity hit this frame
+// XXX xqx
+// HERE_ITEMINFO
+
+	int			xq_target;
+
+
+	int			xq_maxhp;
+	int			xq_maxmana;
+	int			xq_maxendurance;
+	int			xq_maxenergy;
+	int			xq_hpperc;
+	int			xq_xpperc;
+	int			xq_endurance;
+	int			xq_mana;
+
+	int         xq_secondary_weapon; // If 1, secondary melee weapon is taken into account with xq_weapon_loadout()
+
+    int         xq_falling_height;      // How high did we last fall from?
+
+	int			xq_spellbook_page;
+	int			xq_spellbook_slot_1;
+	int			xq_spellbook_slot_2;
+	int			xq_spellbook_slot_3;
+	int			xq_spellbook_slot_4;
+	int			xq_spellbook_slot_5;
+	int			xq_spellbook_slot_6;
+
+	int			xq_copper;
+	int			xq_silver;
+	int			xq_gold;
+	int			xq_platinum;
+
+	char		xq_enttype;
+
+	int			xq_name1;
+	int			xq_name2;
+	int			xq_name3;
+	int			xq_name4;
+	int			xq_name5;
+	int			xq_name6;
+	int			xq_name7;
+	int			xq_name8;
+
+	int			xq_weapon_delay_1;
+	int			xq_weapon_spread;
+	int			xq_weapon_projectiles;
+	int			xq_weapon_range;
+	int			xq_weapon_energycost;
+
+	int			xq_inv_primary1_1;
+	int			xq_inv_primary1_2;
+	int			xq_inv_secondary1_1;
+	int			xq_inv_secondary1_2;
+	int			xq_inv_primary2_1;
+	int			xq_inv_primary2_2;
+	int			xq_inv_primary3_1;
+	int			xq_inv_primary3_2;
+	int			xq_inv_primary4_1;
+	int			xq_inv_primary4_2;
+	int			xq_inv_primary5_1;
+	int			xq_inv_primary5_2;
+	int			xq_inv_primary6_1;
+	int			xq_inv_primary6_2;
+	int			xq_inv_primary7_1;
+	int			xq_inv_primary7_2;
+	int			xq_inv_primary8_1;
+	int			xq_inv_primary8_2;
+	int			xq_inv_primary9_1;
+	int			xq_inv_primary9_2;
+
+	int			xq_inv_leftear_1;
+	int			xq_inv_leftear_2;
+	int			xq_inv_rightear_1;
+	int			xq_inv_rightear_2;
+	int			xq_inv_head_1;
+	int			xq_inv_head_2;
+	int			xq_inv_face_1;
+	int			xq_inv_face_2;
+	int			xq_inv_chest_1;
+	int			xq_inv_chest_2;
+	int			xq_inv_arms_1;
+	int			xq_inv_arms_2;
+	int			xq_inv_waist_1;
+	int			xq_inv_waist_2;
+	int			xq_inv_leftwrist_1;
+	int			xq_inv_leftwrist_2;
+	int			xq_inv_rightwrist_1;
+	int			xq_inv_rightwrist_2;
+	int			xq_inv_legs_1;
+	int			xq_inv_legs_2;
+	int			xq_inv_hands_1;
+	int			xq_inv_hands_2;
+	int			xq_inv_feet_1;
+	int			xq_inv_feet_2;
+	int			xq_inv_shoulders_1;
+	int			xq_inv_shoulders_2;
+	int			xq_inv_back_1;
+	int			xq_inv_back_2;
+	int			xq_inv_neck_1;
+	int			xq_inv_neck_2;
+	int			xq_inv_leftfinger_1;
+	int			xq_inv_leftfinger_2;
+	int			xq_inv_rightfinger_1;
+	int			xq_inv_rightfinger_2;
+	int			xq_inv_mouse1_1;
+	int			xq_inv_mouse1_2;
+
+	int			xq_inv_carry1_1;
+	int			xq_inv_carry1_2;
+	int			xq_inv_carry2_1;
+	int			xq_inv_carry2_2;
+	int			xq_inv_carry3_1;
+	int			xq_inv_carry3_2;
+	int			xq_inv_carry4_1;
+	int			xq_inv_carry4_2;
+	int			xq_inv_carry5_1;
+	int			xq_inv_carry5_2;
+	int			xq_inv_carry6_1;
+	int			xq_inv_carry6_2;
+
+	int			xq_mouse_money_amount;
+	int			xq_mouse_money_type;
+
+	int			xq_loot_slot_1_1;
+	int			xq_loot_slot_1_2;
+	int			xq_loot_slot_2_1;
+	int			xq_loot_slot_2_2;
+	int			xq_loot_slot_3_1;
+	int			xq_loot_slot_3_2;
+	int			xq_loot_slot_4_1;
+	int			xq_loot_slot_4_2;
+	int			xq_loot_slot_5_1;
+	int			xq_loot_slot_5_2;
+	int			xq_loot_slot_6_1;
+	int			xq_loot_slot_6_2;
+	int			xq_loot_slot_7_1;
+	int			xq_loot_slot_7_2;
+	int			xq_loot_slot_8_1;
+	int			xq_loot_slot_8_2;
+	int			xq_loot_slot_9_1;
+	int			xq_loot_slot_9_2;
+	int			xq_loot_slot_10_1;
+	int			xq_loot_slot_10_2;
+	int			xq_loot_slot_11_1;
+	int			xq_loot_slot_11_2;
+	int			xq_loot_slot_12_1;
+	int			xq_loot_slot_12_2;
+	int			xq_loot_slot_13_1;
+	int			xq_loot_slot_13_2;
+	int			xq_loot_slot_14_1;
+	int			xq_loot_slot_14_2;
+	int			xq_loot_slot_15_1;
+	int			xq_loot_slot_15_2;
+	int			xq_loot_slot_16_1;
+	int			xq_loot_slot_16_2;
+	int			xq_loot_slot_17_1;
+	int			xq_loot_slot_17_2;
+	int			xq_loot_slot_18_1;
+	int			xq_loot_slot_18_2;
+	int			xq_loot_slot_19_1;
+	int			xq_loot_slot_19_2;
+	int			xq_loot_slot_20_1;
+	int			xq_loot_slot_20_2;
+	int			xq_loot_slot_21_1;
+	int			xq_loot_slot_21_2;
+	int			xq_loot_slot_22_1;
+	int			xq_loot_slot_22_2;
+	int			xq_loot_slot_23_1;
+	int			xq_loot_slot_23_2;
+	int			xq_loot_slot_24_1;
+	int			xq_loot_slot_24_2;
+	int			xq_loot_slot_25_1;
+	int			xq_loot_slot_25_2;
+	int			xq_loot_slot_26_1;
+	int			xq_loot_slot_26_2;
+	int			xq_loot_slot_27_1;
+	int			xq_loot_slot_27_2;
+	int			xq_loot_slot_28_1;
+	int			xq_loot_slot_28_2;
+	int			xq_loot_slot_29_1;
+	int			xq_loot_slot_29_2;
+	int			xq_loot_slot_30_1;
+	int			xq_loot_slot_30_2;
+	int			xq_loot_slot_31_1;
+	int			xq_loot_slot_31_2;
+	int			xq_loot_slot_32_1;
+	int			xq_loot_slot_32_2;
+	int			xq_loot_slot_33_1;
+	int			xq_loot_slot_33_2;
+	int			xq_loot_slot_34_1;
+	int			xq_loot_slot_34_2;
+	int			xq_loot_slot_35_1;
+	int			xq_loot_slot_35_2;
+	int			xq_loot_slot_36_1;
+	int			xq_loot_slot_36_2;
+	int			xq_loot_slot_37_1;
+	int			xq_loot_slot_37_2;
+	int			xq_loot_slot_38_1;
+	int			xq_loot_slot_38_2;
+	int			xq_loot_slot_39_1;
+	int			xq_loot_slot_39_2;
+	int			xq_loot_slot_40_1;
+	int			xq_loot_slot_40_2;
+	int			xq_loot_slot_41_1;
+	int			xq_loot_slot_41_2;
+	int			xq_loot_slot_42_1;
+	int			xq_loot_slot_42_2;
+	int			xq_loot_slot_43_1;
+	int			xq_loot_slot_43_2;
+	int			xq_loot_slot_44_1;
+	int			xq_loot_slot_44_2;
+	int			xq_loot_slot_45_1;
+	int			xq_loot_slot_45_2;
+
+	int			xq_bank_slot_1_1;
+	int			xq_bank_slot_1_2;
+	int			xq_bank_slot_2_1;
+	int			xq_bank_slot_2_2;
+	int			xq_bank_slot_3_1;
+	int			xq_bank_slot_3_2;
+	int			xq_bank_slot_4_1;
+	int			xq_bank_slot_4_2;
+
+	int			xq_bank_copper;
+	int			xq_bank_silver;
+	int			xq_bank_gold;
+	int			xq_bank_platinum;
+
+	int			xq_merchant_slot_1_1;
+	int			xq_merchant_slot_1_2;
+	int			xq_merchant_slot_2_1;
+	int			xq_merchant_slot_2_2;
+	int			xq_merchant_slot_3_1;
+	int			xq_merchant_slot_3_2;
+	int			xq_merchant_slot_4_1;
+	int			xq_merchant_slot_4_2;
+	int			xq_merchant_slot_5_1;
+	int			xq_merchant_slot_5_2;
+	int			xq_merchant_slot_6_1;
+	int			xq_merchant_slot_6_2;
+	int			xq_merchant_slot_7_1;
+	int			xq_merchant_slot_7_2;
+	int			xq_merchant_slot_8_1;
+	int			xq_merchant_slot_8_2;
+	int			xq_merchant_slot_9_1;
+	int			xq_merchant_slot_9_2;
+	int			xq_merchant_slot_10_1;
+	int			xq_merchant_slot_10_2;
+
+	int			xq_merchant_slot_11_1;
+	int			xq_merchant_slot_11_2;
+	int			xq_merchant_slot_12_1;
+	int			xq_merchant_slot_12_2;
+	int			xq_merchant_slot_13_1;
+	int			xq_merchant_slot_13_2;
+	int			xq_merchant_slot_14_1;
+	int			xq_merchant_slot_14_2;
+	int			xq_merchant_slot_15_1;
+	int			xq_merchant_slot_15_2;
+	int			xq_merchant_slot_16_1;
+	int			xq_merchant_slot_16_2;
+	int			xq_merchant_slot_17_1;
+	int			xq_merchant_slot_17_2;
+	int			xq_merchant_slot_18_1;
+	int			xq_merchant_slot_18_2;
+	int			xq_merchant_slot_19_1;
+	int			xq_merchant_slot_19_2;
+	int			xq_merchant_slot_20_1;
+	int			xq_merchant_slot_20_2;
+
+
+
+	int			xq_trading_me_agree;
+	int			xq_trading_them_agree;
+
+	int			xq_give_slot_1_1;
+	int			xq_give_slot_1_2;
+
+	int			xq_give_slot_2_1;
+	int			xq_give_slot_2_2;
+
+	int			xq_give_slot_3_1;
+	int			xq_give_slot_3_2;
+
+	int			xq_give_slot_4_1;
+	int			xq_give_slot_4_2;
+
+	int			xq_receive_slot_1_1;
+	int			xq_receive_slot_1_2;
+
+	int			xq_receive_slot_2_1;
+	int			xq_receive_slot_2_2;
+
+	int			xq_receive_slot_3_1;
+	int			xq_receive_slot_3_2;
+
+	int			xq_receive_slot_4_1;
+	int			xq_receive_slot_4_2;
+
+	int			xq_give_copper;
+	int			xq_give_silver;
+	int			xq_give_gold;
+	int			xq_give_platinum;
+
+	int			xq_receive_copper;
+	int			xq_receive_silver;
+	int			xq_receive_gold;
+	int			xq_receive_platinum;
+
+	int			xq_generic_name1;
+	int			xq_generic_name2;
+	int			xq_generic_name3;
+	int			xq_generic_name4;
+	int			xq_generic_name5;
+
+	int			xq_group_member1_name1;
+	int			xq_group_member1_name2;
+	int			xq_group_member1_name3;
+	int			xq_group_member1_name4;
+	int			xq_group_member1_name5;
+
+	int			xq_group_member2_name1;
+	int			xq_group_member2_name2;
+	int			xq_group_member2_name3;
+	int			xq_group_member2_name4;
+	int			xq_group_member2_name5;
+
+	int			xq_group_member3_name1;
+	int			xq_group_member3_name2;
+	int			xq_group_member3_name3;
+	int			xq_group_member3_name4;
+	int			xq_group_member3_name5;
+
+	int			xq_group_member4_name1;
+	int			xq_group_member4_name2;
+	int			xq_group_member4_name3;
+	int			xq_group_member4_name4;
+	int			xq_group_member4_name5;
+
+	int			xq_group_member5_name1;
+	int			xq_group_member5_name2;
+	int			xq_group_member5_name3;
+	int			xq_group_member5_name4;
+	int			xq_group_member5_name5;
+
+	int			xq_group_member1_hp_perc;
+	int			xq_group_member2_hp_perc;
+	int			xq_group_member3_hp_perc;
+	int			xq_group_member4_hp_perc;
+	int			xq_group_member5_hp_perc;
+
+	int			xq_group_leader;
+
+	int			xq_str;
+	int			xq_weight;
+	int			xq_weight_max;
+
+	int			xq_mr;
+	int			xq_fr;
+	int			xq_cr;
+	int			xq_pr;
+	int			xq_dr;
+	int			xq_psr;
+
+	int			xq_speed;
+	int			xq_level;
+	int			xq_jump_velocity;
+	int			xq_spell_mod_speed_perc;
+	int			xq_looting;
+	int			xq_sitting;
+
+	int			xq_arena_kills;
+	int			xq_arena_deaths;
+	int			xq_ping;
+	int			xq_time;
+
+	int			xq_skill_capups;
+	int			xq_skill_tailoring;
+	int			xq_skill_tailoring_cap;
+	int			xq_skill_cooking;
+	int			xq_skill_cooking_cap;
+	int			xq_skill_blacksmithing;
+	int			xq_skill_blacksmithing_cap;
+	int			xq_skill_swimming;
+	int			xq_skill_swimming_cap;
+	int			xq_skill_channelling;
+	int			xq_skill_channelling_cap;
+
+	int			xq_skill_melee;
+	int			xq_skill_melee_cap;
+	int			xq_skill_fire;
+	int			xq_skill_fire_cap;
+	int			xq_skill_cold;
+	int			xq_skill_cold_cap;
+	int			xq_skill_poison;
+	int			xq_skill_poison_cap;
+	int			xq_skill_disease;
+	int			xq_skill_disease_cap;
+	int			xq_skill_psy;
+	int			xq_skill_psy_cap;
+	int			xq_skill_h2h;
+	int			xq_skill_h2h_cap;
+	int			xq_skill_w2;
+	int			xq_skill_w2_cap;
+	int			xq_skill_w3;
+	int			xq_skill_w3_cap;
+	int			xq_skill_w4;
+	int			xq_skill_w4_cap;
+	int			xq_skill_w5;
+	int			xq_skill_w5_cap;
+	int			xq_skill_w6;
+	int			xq_skill_w6_cap;
+	int			xq_skill_w7;
+	int			xq_skill_w7_cap;
+	int			xq_skill_w8;
+	int			xq_skill_w8_cap;
+	int			xq_skill_w9;
+	int			xq_skill_w9_cap;
+
+	int			xq_casting;
+	int			xq_casting_sound;
+	int			xq_pfx_received;
+	int			xq_pfx_received_sound;
+	int			xq_casting_hash;
+	int			xq_casting_time;
+	int			xq_casting_down;
+
+	int			xq_spell_slot_1;
+	int			xq_spell_slot_1_down;
+	int			xq_spell_slot_2;
+	int			xq_spell_slot_2_down;
+	int			xq_spell_slot_3;
+	int			xq_spell_slot_3_down;
+	int			xq_spell_slot_4;
+	int			xq_spell_slot_4_down;
+	int			xq_spell_slot_5;
+	int			xq_spell_slot_5_down;
+	int			xq_spell_slot_6;
+	int			xq_spell_slot_6_down;
+
+	int			xq_spfx_1;
+	int			xq_spfx_2;
+	int			xq_spfx_3;
+	int			xq_spfx_4;
+	int			xq_spfx_5;
+	int			xq_spfx_6;
+	int			xq_spfx_7;
+	int			xq_spfx_8;
+	int			xq_spfx_9;
+	int			xq_spfx_10;
+	int			xq_spfx_1_hash;
+	int			xq_spfx_2_hash;
+	int			xq_spfx_3_hash;
+	int			xq_spfx_4_hash;
+	int			xq_spfx_5_hash;
+	int			xq_spfx_6_hash;
+	int			xq_spfx_7_hash;
+	int			xq_spfx_8_hash;
+	int			xq_spfx_9_hash;
+	int			xq_spfx_10_hash;
+	int			xq_spfx_1_remain;
+	int			xq_spfx_2_remain;
+	int			xq_spfx_3_remain;
+	int			xq_spfx_4_remain;
+	int			xq_spfx_5_remain;
+	int			xq_spfx_6_remain;
+	int			xq_spfx_7_remain;
+	int			xq_spfx_8_remain;
+	int			xq_spfx_9_remain;
+	int			xq_spfx_10_remain;
+
+	int			xq_flags;
+	int			xq_invis; // this is set to 1 if we are invis. We always see ourselves but this is used to put ( ) around our name plate when we are invis.
+
+	int			xq_rez_author_1;
+	int			xq_rez_author_2;
+	int			xq_rez_author_3;
+	int			xq_rez_author_4;
+	int			xq_rez_author_5;
+	int			xq_rez_perc;
+
+	int			xq_ac;
+	int			xq_atk;
+
+	uint16_t	xq_app_model;
+	int			xq_app_model_scale;
+	int			xq_app_texture_num_legs;
+	int			xq_app_texture_num_torso;
+	int			xq_app_texture_num_head;
+	int			xq_app_texture_num_feet;
+	int			xq_app_texture_num_arms;
+	int			xq_app_texture_num_leftwrist;
+	int			xq_app_texture_num_rightwrist;
+	int			xq_app_texture_num_hands;
+	int			xq_app_held_primary_model;
+	int			xq_app_held_secondary_model;
+
+	int			xq_mysolid; // Needed for cg_bbox drawing code
+	int			xq_client_anim; // We use this to start player anims server-side
+	int			xq_class;
+	int			xq_race;
+
+	int			xq_last_bard_song_success;	// timstamp of when WE last successfully completed casting of a bard song (used for bard song autorecast)
+
+// XXX -xqx
 
 	// not communicated over the net at all
 	int			ping;			// server to game info for scoreboard
@@ -1266,7 +1816,10 @@ typedef enum {
 	TR_LINEAR,
 	TR_LINEAR_STOP,
 	TR_SINE,					// value = base + sin( time / duration ) * delta
-	TR_GRAVITY
+	TR_GRAVITY,
+// XXX xqx
+	TR_GRAVITY_INSTA
+// XXX -xqx
 } trType_t;
 
 typedef struct {
@@ -1323,7 +1876,71 @@ typedef struct entityState_s {
 	int		powerups;		// bit flags
 	int		weapon;			// determines weapon and flash model, etc
 	int		legsAnim;		// mask off ANIM_TOGGLEBIT
-	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
+	int		torsoAnim;		// mask off ANIM_TOGGLEBIT.  For NPC's it's the server-set torso animation. Last byte is the anim num, previous byte is how many times it should be played
+
+// XXX xqx
+// HERE_ITEMINFO
+
+	char		xq_enttype;
+
+	int			xq_name1;
+	int			xq_name2;
+	int			xq_name3;
+	int			xq_name4;
+	int			xq_name5;
+	int			xq_name6;
+	int			xq_name7;
+	int			xq_name8;
+
+	int			xq_corpse_id;
+
+	int			xq_weapon_delay_1;
+	int			xq_weapon_spread;
+	int			xq_weapon_projectiles;
+	int			xq_weapon_range;
+
+	int			xq_speed;
+	int			xq_level;
+	int			xq_jump_velocity;
+	int			xq_spell_mod_speed_perc;
+	int			xq_looting;
+	int			xq_sitting;
+
+	int			xq_arena_kills;
+	int			xq_arena_deaths;
+	int			xq_ping;
+	int			xq_time;
+
+	int			xq_skill_swimming;
+	uint32_t	xq_pop_id;
+
+	uint8_t		xq_casting;
+	int			xq_casting_sound;
+	int			xq_pfx_received;			// up to 4 receiver particle effects started THIS FRAME on the entity
+	int			xq_pfx_received_sound;		// up to 4 receiver spell hit sound effects that go along with the line above
+	int			xq_casting_hash;
+
+	int			xq_flags;
+	int			xq_anim; // Anim queue of up to 2 anims the server sends for the NPC this frame (for example, mob double attacks in the same frame etc).
+	char		xq_invis; // this is set to 1 if we see something that is normally invis (probably due to a see invis type spell)
+
+	float		xq_heading;
+	float		xq_pitch;
+	float		xq_roll;
+	uint16_t	xq_app_model;
+	int			xq_app_model_scale;
+	int			xq_app_texture_num_legs;
+	int			xq_app_texture_num_torso;
+	int			xq_app_texture_num_head;
+	int			xq_app_texture_num_feet;
+	int			xq_app_texture_num_arms;
+	int			xq_app_texture_num_leftwrist;
+	int			xq_app_texture_num_rightwrist;
+	int			xq_app_texture_num_hands;
+	int			xq_app_held_primary_model;
+	int			xq_app_held_secondary_model;
+
+// XXX -xqx
 
 	int		generic1;
 } entityState_t;
@@ -1433,5 +2050,8 @@ typedef enum _flag_status {
 
 #define LERP( a, b, w ) ( ( a ) * ( 1.0f - ( w ) ) + ( b ) * ( w ) )
 #define LUMA( red, green, blue ) ( 0.2126f * ( red ) + 0.7152f * ( green ) + 0.0722f * ( blue ) )
+// XXX xqx
+#include "../xqcommon/xq_common.h"
+// XXX -xqx
 
 #endif	// __Q_SHARED_H

@@ -144,7 +144,7 @@ localEntity_t *CG_SmokePuff( const vec3_t p, const vec3_t vel,
 
 	// rage pro can't alpha fade, so use a different shader
 	if ( cgs.glconfig.hardwareType == GLHW_RAGEPRO ) {
-		re->customShader = cgs.media.smokePuffRageProShader;
+		//re->customShader = cgs.media.smokePuffRageProShader; // XXX xqx commented out
 		re->shaderRGBA[0] = 0xff;
 		re->shaderRGBA[1] = 0xff;
 		re->shaderRGBA[2] = 0xff;
@@ -197,7 +197,7 @@ void CG_SpawnEffect( vec3_t org ) {
 #ifdef MISSIONPACK
 	re->origin[2] += 16;
 #else
-	re->origin[2] -= 24;
+	re->origin[2] += 50; // XXX xqx changed -24 to 50
 #endif
 }
 

@@ -70,8 +70,15 @@ static void CG_TransitionEntity( centity_t *cent ) {
 	// check for events
 	CG_CheckEvents( cent );
 }
-
-
+// XXX xqx
+void xq_process_items(void) {
+	xq_item_t item;
+	while (trap_XQ_GetItemFromQueue(&item, xq_CmdCookies)) {
+		//xq_clog(COLOR_WHITE, "%i processing item id %li name %s\n", cg.time, item.id, item.name);
+		xq_SetCache((uint64_t)&item, XQ_ITEM, 0);
+    }
+}
+// XXX -xqx
 /*
 ==================
 CG_SetInitialSnapshot
@@ -382,7 +389,9 @@ void CG_ProcessSnapshots( void ) {
 
 		// we have passed the transition from nextFrame to frame
 		CG_TransitionSnapshot();
+
 	} while ( 1 );
+	xq_process_items(); // XXX xqx
 
 	// assert our valid conditions upon exiting
 	if ( cg.snap == NULL ) {

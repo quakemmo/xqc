@@ -372,12 +372,26 @@ static qboolean PM_CheckJump( void ) {
 		return qfalse;
 	}
 
+// XXX xqx
+	if (pm->ps->xq_endurance < XQ_ENDURANCE_PER_JUMP) {
+		return qfalse;
+	}
+	
+	pm->ps->xq_endurance -= XQ_ENDURANCE_PER_JUMP;
+	if (pm->ps->xq_endurance < 0) {
+		pm->ps->xq_endurance = 1;
+	}
+// XXX -xqx
+
 	pml.groundPlane = qfalse;		// jumping away
 	pml.walking = qfalse;
 	pm->ps->pm_flags |= PMF_JUMP_HELD;
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
-	pm->ps->velocity[2] = JUMP_VELOCITY;
+// XXX xqx
+	//pm->ps->velocity[2] = JUMP_VELOCITY;
+	pm->ps->velocity[2] = pm->ps->xq_jump_velocity;
+// XXX -xqx
 	PM_AddEvent( EV_JUMP );
 
 	if ( pm->cmd.forwardmove >= 0 ) {
@@ -422,7 +436,7 @@ static qboolean	PM_CheckWaterJump( void ) {
 		return qfalse;
 	}
 
-	spot[2] += 16;
+	spot[2] += 40; // XXX xqx changed 16 to 40
 	cont = pm->pointcontents (spot, pm->ps->clientNum );
 	if ( cont & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY) ) {
 		return qfalse;
@@ -513,8 +527,13 @@ static void PM_WaterMove( void ) {
 	VectorCopy (wishvel, wishdir);
 	wishspeed = VectorNormalize(wishdir);
 
-	if ( wishspeed > pm->ps->speed * pm_swimScale ) {
-		wishspeed = pm->ps->speed * pm_swimScale;
+// XXX xqx
+//	if ( wishspeed > pm->ps->speed * pm_swimScale ) {
+//		wishspeed = pm->ps->speed * pm_swimScale;
+	float swimSpeed = (pm->ps->speed * pm->ps->xq_skill_swimming) / 30.0;
+	if (wishspeed > swimSpeed) {
+		wishspeed = swimSpeed;
+// XXX -xqx
 	}
 
 	PM_Accelerate (wishdir, wishspeed, pm_wateraccelerate);
@@ -981,6 +1000,9 @@ static void PM_CrashLand( void ) {
 	// SURF_NODAMAGE is used for bounce pads where you don't ever
 	// want to take damage or play a crunch sound
 	if ( !(pml.groundTrace.surfaceFlags & SURF_NODAMAGE) )  {
+// XXX xqx
+		pm->ps->xq_falling_height = delta;
+// XXX -xqx
 		if ( delta > 60 ) {
 			PM_AddEvent( EV_FALL_FAR );
 		} else if ( delta > 40 ) {
@@ -1206,6 +1228,12 @@ static void PM_SetWaterLevel( void ) {
 	int			cont;
 	int			sample1;
 	int			sample2;
+// XXX xqx
+	float mul = 1;
+	if (pm->ps->xq_app_model_scale != 0 && pm->ps->xq_app_model_scale != 100) {
+		mul *= pm->ps->xq_app_model_scale / 100.0f;
+	}
+// XXX -xqx
 
 	//
 	// get waterlevel, accounting for ducking
@@ -1215,20 +1243,20 @@ static void PM_SetWaterLevel( void ) {
 
 	point[0] = pm->ps->origin[0];
 	point[1] = pm->ps->origin[1];
-	point[2] = pm->ps->origin[2] + MINS_Z + 1;	
+	point[2] = pm->ps->origin[2] + MINS_Z * mul + 1;	 // XXX xqx added * mul
 	cont = pm->pointcontents( point, pm->ps->clientNum );
 
 	if ( cont & MASK_WATER ) {
-		sample2 = pm->ps->viewheight - MINS_Z;
+		sample2 = pm->ps->viewheight - MINS_Z * mul; // XXX xqx added * mul
 		sample1 = sample2 / 2;
 
 		pm->watertype = cont;
 		pm->waterlevel = 1;
-		point[2] = pm->ps->origin[2] + MINS_Z + sample1;
+		point[2] = pm->ps->origin[2] + MINS_Z * mul + sample1; // XXX xqx added * mul
 		cont = pm->pointcontents (point, pm->ps->clientNum );
 		if ( cont & MASK_WATER ) {
 			pm->waterlevel = 2;
-			point[2] = pm->ps->origin[2] + MINS_Z + sample2;
+			point[2] = pm->ps->origin[2] + MINS_Z * mul + sample2; // XXX xqx added * mul
 			cont = pm->pointcontents (point, pm->ps->clientNum );
 			if ( cont & MASK_WATER ){
 				pm->waterlevel = 3;
@@ -1247,6 +1275,12 @@ Sets mins, maxs, and pm->ps->viewheight
 */
 static void PM_CheckDuck (void)
 {
+// XXX xqx
+	float mul = 1;
+	if (pm->ps->xq_app_model_scale != 100) {
+		mul *= pm->ps->xq_app_model_scale / 100.0f;
+	}
+// XXX -xqx
 	trace_t	trace;
 
 	if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
@@ -1260,18 +1294,18 @@ static void PM_CheckDuck (void)
 			VectorSet( pm->maxs, 15, 15, 16 );
 		}
 		pm->ps->pm_flags |= PMF_DUCKED;
-		pm->ps->viewheight = CROUCH_VIEWHEIGHT;
+		pm->ps->viewheight = CROUCH_VIEWHEIGHT * mul; // XXX xqx added * mul
 		return;
 	}
 	pm->ps->pm_flags &= ~PMF_INVULEXPAND;
 
-	pm->mins[0] = -15;
-	pm->mins[1] = -15;
+	pm->mins[0] = -15 * mul; // XXX xqx added * mul
+	pm->mins[1] = -15 * mul; // XXX xqx added * mul
 
-	pm->maxs[0] = 15;
-	pm->maxs[1] = 15;
+	pm->maxs[0] = 15 * mul; // XXX xqx added * mul
+	pm->maxs[1] = 15 * mul; // XXX xqx added * mul
 
-	pm->mins[2] = MINS_Z;
+	pm->mins[2] = MINS_Z * mul; // XXX xqx added * mul
 
 	if (pm->ps->pm_type == PM_DEAD)
 	{
@@ -1289,22 +1323,22 @@ static void PM_CheckDuck (void)
 		if (pm->ps->pm_flags & PMF_DUCKED)
 		{
 			// try to stand up
-			pm->maxs[2] = 32;
+			pm->maxs[2] = 56 * mul; // XXX xqx added * mul, changed 32 to 56
 			pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
 			if (!trace.allsolid)
 				pm->ps->pm_flags &= ~PMF_DUCKED;
 		}
 	}
 
-	if (pm->ps->pm_flags & PMF_DUCKED)
+	if (pm->ps->pm_flags & PMF_DUCKED || pm->ps->xq_sitting || pm->ps->xq_looting) // XXX xqx added sitting and looting conditions
 	{
-		pm->maxs[2] = 16;
-		pm->ps->viewheight = CROUCH_VIEWHEIGHT;
+		pm->maxs[2] = 40 * mul; // XXX xqx added * mul, changed 16 to 40
+		pm->ps->viewheight = CROUCH_VIEWHEIGHT * mul; // XXX xqx added * mul
 	}
 	else
 	{
-		pm->maxs[2] = 32;
-		pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+		pm->maxs[2] = 56 * mul; // XXX xqx added * mul, changed 32 to 56
+		pm->ps->viewheight = DEFAULT_VIEWHEIGHT * mul; // XXX xqx added * mul
 	}
 }
 
@@ -1378,7 +1412,7 @@ static void PM_Footsteps( void ) {
 		PM_ContinueLegsAnim( LEGS_BACK );
 	*/
 	} else {
-		if ( !( pm->cmd.buttons & BUTTON_WALKING ) ) {
+		if ( !( pm->cmd.buttons & BUTTON_WALKING || pm->ps->speed < XQ_ANIM_RUN_THRESHOLD_PLAYER) ) { // XXX xqx added 2nd condition
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
 				PM_ContinueLegsAnim( LEGS_BACK );
@@ -1535,7 +1569,7 @@ Generates weapon events and modifes the weapon counter
 ==============
 */
 static void PM_Weapon( void ) {
-	int		addTime;
+	//int		addTime; // XXX xqx
 
 	// don't allow attack until all buttons are up
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
@@ -1611,6 +1645,11 @@ static void PM_Weapon( void ) {
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
 	}
+	// XXX xqx
+	if (pm->ps->xq_flags & XQ_ZONED_PROTECTED) {
+		return;
+	}
+	// XXX -xqx
 
 	// start the animation even if out of ammo
 	if ( pm->ps->weapon == WP_GAUNTLET ) {
@@ -1620,28 +1659,62 @@ static void PM_Weapon( void ) {
 			pm->ps->weaponstate = WEAPON_READY;
 			return;
 		}
-		PM_StartTorsoAnim( TORSO_ATTACK2 );
+		// XXX xqx
+		//PM_StartTorsoAnim( TORSO_ATTACK2 );
+		if (pm->ps->xq_secondary_weapon == 1) {
+			PM_StartTorsoAnim(TORSO_GESTURE);
+		} else {
+			PM_StartTorsoAnim(TORSO_ATTACK2);
+		}
+		// XXX xqx
 	} else {
 		PM_StartTorsoAnim( TORSO_ATTACK );
 	}
 
-	pm->ps->weaponstate = WEAPON_FIRING;
+// XXX xqx
+	if (pm->ps->ammo[0] >= pm->ps->xq_weapon_energycost) {
+		pm->ps->weaponstate = WEAPON_FIRING;
+	}
+// XXX -xqx
 
 	// check for out of ammo
-	if ( ! pm->ps->ammo[ pm->ps->weapon ] ) {
+
+// XXX xqx
+	//if (pm->ps->weapon != WP_GAUNTLET) {
+	if (pm->ps->ammo[0] < pm->ps->xq_weapon_energycost) {
+
+
 		PM_AddEvent( EV_NOAMMO );
 		pm->ps->weaponTime += 500;
 		return;
 	}
 
-	// take an ammo away if not infinite
-	if ( pm->ps->ammo[ pm->ps->weapon ] != -1 ) {
-		pm->ps->ammo[ pm->ps->weapon ]--;
+/*
+	if ( ! pm->ps->ammo[ pm->ps->weapon ] ) {
+		PM_AddEvent( EV_NOAMMO );
+		pm->ps->weaponTime += 500;
+		return;
 	}
+*/
+
+	// take an ammo away if not infinite
+/*
+		if ( pm->ps->ammo[ pm->ps->weapon ] != -1 ) {
+			pm->ps->ammo[ pm->ps->weapon ]--;
+		}
+	}
+*/
+		//pm->ps->xq_mana -= pm->ps->xq_weapon_energycost;
+		pm->ps->ammo[0] -= pm->ps->xq_weapon_energycost;
+	//}
+	
+
+// XXX -xqx
 
 	// fire weapon
 	PM_AddEvent( EV_FIRE_WEAPON );
 
+/*
 	switch( pm->ps->weapon ) {
 	default:
 	case WP_GAUNTLET:
@@ -1694,14 +1767,18 @@ static void PM_Weapon( void ) {
 	else
 	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
 		addTime /= 1.3;
-	}
+  	}
 	else
 #endif
 	if ( pm->ps->powerups[PW_HASTE] ) {
 		addTime /= 1.3;
 	}
+*/
 
-	pm->ps->weaponTime += addTime;
+// XXX xqx
+	//pm->ps->weaponTime += addTime;
+	pm->ps->weaponTime += pm->ps->xq_weapon_delay_1;
+// XXX -xqx
 }
 
 /*
@@ -1711,7 +1788,8 @@ PM_Animate
 */
 
 static void PM_Animate( void ) {
-	if ( pm->cmd.buttons & BUTTON_GESTURE ) {
+	if ( pm->cmd.buttons & BUTTON_GESTURE || pm->ps->xq_client_anim == XQ_ANIM_CAST) {
+		pm->ps->xq_client_anim = 0;
 		if ( pm->ps->torsoTimer == 0 ) {
 			PM_StartTorsoAnim( TORSO_GESTURE );
 			pm->ps->torsoTimer = TIMER_GESTURE;
@@ -1856,11 +1934,14 @@ void PmoveSingle (pmove_t *pmove) {
 
 	// set the talk balloon flag
 	if ( pm->cmd.buttons & BUTTON_TALK ) {
-		pm->ps->eFlags |= EF_TALK;
+		//pm->ps->eFlags |= EF_TALK; // XXX xqx commented out
 	} else {
-		pm->ps->eFlags &= ~EF_TALK;
+		//pm->ps->eFlags &= ~EF_TALK; // XXX xqx commented out
 	}
 
+
+// XXX xqx
+/*
 	// set the firing flag for continuous beam weapons
 	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION && pm->ps->pm_type != PM_NOCLIP
 		&& ( pm->cmd.buttons & BUTTON_ATTACK ) && pm->ps->ammo[ pm->ps->weapon ] ) {
@@ -1869,6 +1950,40 @@ void PmoveSingle (pmove_t *pmove) {
 		pm->ps->eFlags &= ~EF_FIRING;
 	}
 
+
+*/
+
+
+	if (
+		!(pm->ps->pm_flags & PMF_RESPAWNED) && 
+		pm->ps->pm_type != PM_INTERMISSION &&
+		pm->ps->pm_type != PM_NOCLIP &&
+		(pm->cmd.buttons & BUTTON_ATTACK)) {
+
+		if (pm->ps->ammo[0] >= pm->ps->xq_weapon_energycost || (pm->ps->weapon == WP_GAUNTLET)) {
+			// XXX xqx
+			if (!(pm->ps->xq_flags & XQ_ZONED_PROTECTED)) {
+			// XXX -xqx
+				pm->ps->eFlags |= EF_FIRING;
+			}
+		} else {
+			pm->ps->eFlags &= ~EF_FIRING;
+		}
+	} else {
+		pm->ps->eFlags &= ~EF_FIRING;
+	}
+
+
+	pm->ps->speed = pm->ps->xq_speed * ((float)pm->ps->xq_spell_mod_speed_perc / 100);
+	//Com_Printf("xq_spell_mod_speed_perc = %i\n", pm->ps->xq_spell_mod_speed_perc);
+
+	if (pm->ps->xq_flags & XQ_STUNNED) {
+		pm->ps->speed = 0;
+	}
+
+
+
+// XXX -xqx
 	// clear the respawned flag if attack and use are cleared
 	if ( pm->ps->stats[STAT_HEALTH] > 0 && 
 		!( pm->cmd.buttons & (BUTTON_ATTACK | BUTTON_USE_HOLDABLE) ) ) {
@@ -1908,7 +2023,9 @@ void PmoveSingle (pmove_t *pmove) {
 	pml.frametime = pml.msec * 0.001;
 
 	// update the viewangles
-	PM_UpdateViewAngles( pm->ps, &pm->cmd );
+	if (!pm->ps->xq_looting && !pm->ps->xq_sitting && pm->ps->pm_type != PM_DEAD) { // XXX xqx added contitions
+		PM_UpdateViewAngles( pm->ps, &pm->cmd );
+	}
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -1958,10 +2075,32 @@ void PmoveSingle (pmove_t *pmove) {
 	// set mins, maxs, and viewheight
 	PM_CheckDuck ();
 
+// XXX xqx
+	if (pm->ps->xq_looting) {
+		pm->ps->pm_flags |= PMF_DUCKED;
+		pm->ps->speed = 0;
+		pm->cmd.forwardmove = 0;
+		pm->cmd.rightmove = 0;
+		pm->cmd.upmove = 0;
+	}
+	if (pm->ps->xq_sitting) {
+		pm->ps->pm_flags |= PMF_DUCKED;
+		pm->ps->speed = 0;
+		pm->cmd.forwardmove = 0;
+		pm->cmd.rightmove = 0;
+		pm->cmd.upmove = 0;
+	}
+
+// XXX -xqx
+
 	// set groundentity
 	PM_GroundTrace();
 
 	if ( pm->ps->pm_type == PM_DEAD ) {
+// XXX xqx
+	pm->ps->viewheight = DEAD_VIEWHEIGHT;
+return;
+// XXX -xqx
 		PM_DeadMove ();
 	}
 

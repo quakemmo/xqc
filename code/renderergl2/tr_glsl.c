@@ -430,7 +430,7 @@ static int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	{
 		if (fallback)
 		{
-			ri.Printf(PRINT_DEVELOPER, "...loading built-in '%s'\n", filename);
+			ri.Printf(PRINT_DEVELOPER_WHITE, "...loading built-in '%s'\n", filename); // XXX xqx added _WHITE
 			shaderText = fallback;
 			size = strlen(shaderText);
 		}
@@ -442,7 +442,7 @@ static int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	}
 	else
 	{
-		ri.Printf(PRINT_DEVELOPER, "...loading '%s'\n", filename);
+		ri.Printf(PRINT_DEVELOPER_WHITE, "...loading '%s'\n", filename); // XXX xqx added _WHITE
 		shaderText = buffer;
 	}
 

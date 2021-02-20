@@ -1213,6 +1213,9 @@ void R_AddEntitySurfaces (void) {
 		case RT_PORTALSURFACE:
 			break;		// don't draw anything
 		case RT_SPRITE:
+// XXX xqx
+		case RT_XQNAME:
+// XXX -xqx
 		case RT_BEAM:
 		case RT_LIGHTNING:
 		case RT_RAIL_CORE:

@@ -45,6 +45,41 @@ int PASSFLOAT( float x ) {
 void	trap_Print( const char *fmt ) {
 	syscall( CG_PRINT, fmt );
 }
+// XXX xqx
+qhandle_t trap_R_XQ_TShader(const char *name, int level) {
+	return syscall(CG_R_XQ_TSHADER, name, level);
+}
+void trap_ConNotify(void) {
+	syscall(CG_XQ_CON_NOTIFY);
+}
+void trap_XQ_Encrypt(void *data, int len, char *key, int keylen) {
+	syscall(CG_XQ_ENCRYPT, data, len, key, keylen);
+}
+void trap_XQ_Decrypt(void *data, int len, char *key, int keylen) {
+	syscall(CG_XQ_DECRYPT, data, len, key, keylen);
+}
+int trap_XQ_CryptoPad(byte *padded_data, const byte *data, int len, int pad_len) {
+	return syscall(CG_XQ_CRYPTOPAD, padded_data, data, len, pad_len);
+}
+int trap_XQ_Pers_Get_I64(char *name, int64_t *ret) {
+	return syscall(CG_XQ_PERS_GET_I64, name, ret);
+}
+int trap_XQ_Pers_Set_I64(char *name, int64_t val) {
+	return syscall(CG_XQ_PERS_SET_I64, name, val);
+}
+int64_t trap_XQ_Get_Keys() {
+	return syscall(CG_XQ_GET_KEYS);
+}
+void trap_XQ_Mouselook(int on) {
+	syscall(CG_XQ_MOUSELOOK, on);
+}
+void trap_XQ_ClearKeys() {
+	syscall(CG_XQ_CLEARKEYS);
+}
+int trap_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies) {
+	return syscall(CG_XQ_GETITEMFROMQUEUE, fill, cookies);
+}
+// XXX -xqx
 
 void trap_Error(const char *fmt)
 {

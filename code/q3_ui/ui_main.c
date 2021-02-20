@@ -215,7 +215,7 @@ static cvarTable_t		cvarTable[] = {
 
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
 	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM },
-	{ NULL, "g_localTeamPref", "", 0 }
+	{ NULL, "g_localTeamPref", "", 0 },
 };
 
 static int cvarTableSize = ARRAY_LEN( cvarTable );

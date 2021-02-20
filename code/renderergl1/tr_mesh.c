@@ -272,6 +272,21 @@ int R_ComputeFogNum( md3Header_t *header, trRefEntity_t *ent ) {
 
 	return 0;
 }
+// XXX xqx
+static void apply_tint(shader_t *sh, int tint, trRefEntity_t *ent) {
+	if (tint) {
+		sh->stages[0]->constantColor[0] = (tint & 0xff0000) >> 16;
+		sh->stages[0]->constantColor[1] = (tint & 0xff00) >> 8;
+		sh->stages[0]->constantColor[2] = tint & 0xff;
+		sh->stages[0]->rgbGen = CGEN_CONST;
+	} else {
+		sh->stages[0]->constantColor[0] = 0;
+		sh->stages[0]->constantColor[1] = 0;
+		sh->stages[0]->constantColor[2] = 0;
+		sh->stages[0]->rgbGen = 0;
+	}
+}
+// XXX -xqx
 
 /*
 =================
@@ -349,8 +364,52 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	surface = (md3Surface_t *)( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
 
-		if ( ent->e.customShader ) {
+// XXX xqx
+		// skipxxxTint is used in Arena zones to emphasize player model
+		if (!strcmp(surface->name, "a_feet")) {
+			shader = R_GetShaderByHandle(ent->e.feetShader);
+			if (ent->e.skipFeetTint == 0) {
+				apply_tint(shader, ent->e.feetTint, ent);
+			}
+		} else if (!strcmp(surface->name, "a_arms")) {
+			shader = R_GetShaderByHandle(ent->e.armsShader);
+			if (ent->e.skipArmsTint == 0) {
+				apply_tint(shader, ent->e.armsTint, ent);
+			}
+		} else if (!strcmp(surface->name, "a_leftwrist")) {
+			shader = R_GetShaderByHandle(ent->e.leftwristShader);
+			if (ent->e.skipLeftwristTint == 0) {
+				apply_tint(shader, ent->e.leftwristTint, ent);
+			}
+		} else if (!strcmp(surface->name, "a_rightwrist")) {
+			shader = R_GetShaderByHandle(ent->e.rightwristShader);
+			if (ent->e.skipRightwristTint == 0) {
+				apply_tint(shader, ent->e.rightwristTint, ent);
+			}
+		} else if (!strcmp(surface->name, "a_hands")) {
+			shader = R_GetShaderByHandle(ent->e.handsShader);
+			if (ent->e.skipHandsTint == 0) {
+				apply_tint(shader, ent->e.handsTint, ent);
+			}
+		} else if ( ent->e.customShader ) {
+			// player legs, torso and head are rendered here
 			shader = R_GetShaderByHandle( ent->e.customShader );
+
+
+			// We avoid applying tint to stuff that isn't likely a Q3 player model
+			if (
+				!strcmp(surface->name, "u_upper") ||
+				!strcmp(surface->name, "u_torso") ||
+				!strcmp(surface->name, "l_legs") ||
+				!strcmp(surface->name, "l_lower") ||
+				!strcmp(surface->name, "h_head")
+			) {
+
+				if (ent->e.skipTint == 0) {
+					apply_tint(shader, ent->e.customTint, ent);
+				}
+			}
+// XXX -xqx
 		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
 			skin_t *skin;
 			int		j;

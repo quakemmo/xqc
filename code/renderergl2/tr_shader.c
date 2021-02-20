@@ -3702,7 +3702,7 @@ static void ScanAndLoadShaderFiles( void )
 			}
 		}
 		
-		ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
+		ri.Printf( PRINT_DEVELOPER_WHITE, "...loading '%s'\n", filename ); // XXX xqx added _WHITE
 		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );
 		
 		if ( !buffers[i] )

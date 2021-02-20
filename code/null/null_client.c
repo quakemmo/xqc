@@ -38,6 +38,10 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 
 void Key_WriteBindings( fileHandle_t f ) {
 }
+// XXX xqx
+void MM_Key_WriteBindings( fileHandle_t f ) {
+}
+// XXX -xqx
 
 void CL_Frame ( int msec ) {
 }

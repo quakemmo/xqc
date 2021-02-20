@@ -46,10 +46,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	VOTE_TIME			30000	// 30 seconds before vote times out
 
-#define	MINS_Z				-24
-#define	DEFAULT_VIEWHEIGHT	26
-#define CROUCH_VIEWHEIGHT	12
-#define	DEAD_VIEWHEIGHT		-16
+#define	MINS_Z				0 // XXX xqx changed -24 to 0
+#define	DEFAULT_VIEWHEIGHT	50 // XXX xqx changed 26 to 50
+#define CROUCH_VIEWHEIGHT	36 // XXX xqx changed 12 to 36
+#define	DEAD_VIEWHEIGHT		150 // XXX xqx changed - 16 to 150
 
 //
 // config strings are a general means of communicating variable length strings
@@ -232,7 +232,7 @@ typedef enum {
 	PERS_IMPRESSIVE_COUNT,			// two railgun hits in a row
 	PERS_EXCELLENT_COUNT,			// two successive kills in a short amount of time
 	PERS_DEFEND_COUNT,				// defend awards
-	PERS_ASSIST_COUNT,				// assist awards
+	PERS_XQ_PAIN_COUNT,				// assist awards // XXX xqx changed PERS_ASSIST_COUNT to PERS_XQ_PAIN_COUNT
 	PERS_GAUNTLET_FRAG_COUNT,		// kills with the guantlet
 	PERS_CAPTURES					// captures
 } persEnum_t;
@@ -257,7 +257,7 @@ typedef enum {
 #define	EF_TALK				0x00001000		// draw a talk balloon
 #define	EF_CONNECTION		0x00002000		// draw a connection trouble sprite
 #define	EF_VOTED			0x00004000		// already cast a vote
-#define	EF_AWARD_IMPRESSIVE	0x00008000		// draw an impressive sprite
+#define	EF_XQ_BLINKING		0x00008000		// XXX xqx: when on, entity should be blinking visible/invisible (was: EF_AWARD_IMPRESSIVE)
 #define	EF_AWARD_DEFEND		0x00010000		// draw a defend sprite
 #define	EF_AWARD_ASSIST		0x00020000		// draw a assist sprite
 #define EF_AWARD_DENIED		0x00040000		// denied
@@ -447,7 +447,14 @@ typedef enum {
 	EV_TAUNT_FOLLOWME,
 	EV_TAUNT_GETFLAG,
 	EV_TAUNT_GUARDBASE,
-	EV_TAUNT_PATROL
+	EV_TAUNT_PATROL,
+// XXX xqx
+	EV_PLAYER_DING,
+	EV_PLAYER_XP,
+	EV_KICKABLE_TOUCH,
+	EV_KICKABLE_BOUNCE,
+	EV_SPELL_HIT
+// XXX -xqx
 
 } entity_event_t;
 
@@ -593,6 +600,11 @@ typedef enum {
 	MOD_SUICIDE,
 	MOD_TARGET_LASER,
 	MOD_TRIGGER_HURT,
+// XXX xqx
+	MOD_XQ_SPELL,
+	MOD_XQ_GODKILL,
+	MOD_XQ_DEPOP,
+// XXX -xqx
 #ifdef MISSIONPACK
 	MOD_NAIL,
 	MOD_CHAINGUN,
@@ -675,6 +687,11 @@ typedef enum {
 	ET_GENERAL,
 	ET_PLAYER,
 	ET_ITEM,
+// XXX xqx
+	ET_XQ_CORPSE,
+	ET_XQ_GROUND,
+	ET_XQ_MOB,
+// XXX -xqx
 	ET_MISSILE,
 	ET_MOVER,
 	ET_BEAM,

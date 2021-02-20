@@ -25,6 +25,7 @@ typedef struct {
 	qboolean	down;
 	int			repeats;		// if > 1, it is autorepeating
 	char		*binding;
+	char		*mm_binding; // XXX xqx binding for mouse mode
 } qkey_t;
 
 extern	qboolean	key_overstrikeMode;
@@ -35,6 +36,15 @@ void Field_KeyDownEvent( field_t *edit, int key );
 void Field_CharEvent( field_t *edit, int ch );
 void Field_Draw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape );
 void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape );
+// XXX xqx
+void xq_Field_Draw(field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape);
+void xq_Field_BigDraw(field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape);
+void xq_Field_AnyDraw(field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape, int charwidth, int charheight);
+void MM_Key_SetBinding( int keynum, const char *binding );
+char *MM_Key_GetBinding( int keynum );
+int  MM_Key_GetKey(const char *binding);
+void MM_Key_WriteBindings( fileHandle_t f );
+// XXX -xqx
 
 #define		COMMAND_HISTORY		32
 extern	field_t	historyEditLines[COMMAND_HISTORY];

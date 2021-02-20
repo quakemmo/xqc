@@ -58,10 +58,10 @@ void CG_CheckAmmo( void ) {
 #ifdef MISSIONPACK
 		case WP_PROX_LAUNCHER:
 #endif
-			total += cg.snap->ps.ammo[i] * 1000;
+			total += cg.snap->ps.ammo[0] * 1000; // XXX xqx - changed to ammo[0]
 			break;
 		default:
-			total += cg.snap->ps.ammo[i] * 200;
+			total += cg.snap->ps.ammo[0] * 200; // XXX xqx - changed to ammo[0]
 			break;
 		}
 		if ( total >= 5000 ) {
@@ -328,12 +328,21 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 		trap_S_StartLocalSound( cgs.media.hitTeamSound, CHAN_LOCAL_SOUND );
 	}
 
+// XXX xqx rewritten the pain event code - now simply server-driven
+/*
 	// health changes of more than -1 should make pain sounds
 	if ( ps->stats[STAT_HEALTH] < ops->stats[STAT_HEALTH] - 1 ) {
 		if ( ps->stats[STAT_HEALTH] > 0 ) {
 			CG_PainEvent( &cg.predictedPlayerEntity, ps->stats[STAT_HEALTH] );
 		}
 	}
+*/
+	if (ps->persistant[PERS_XQ_PAIN_COUNT] > ops->persistant[PERS_XQ_PAIN_COUNT]) {
+		if (ps->stats[STAT_HEALTH] > 0) {
+			CG_PainEvent(&cg.predictedPlayerEntity, ps->stats[STAT_HEALTH]);
+		}
+	}
+// XXX -xqx
 
 
 	// if we are going into the intermission, don't start any voices
@@ -395,11 +404,14 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 		reward = qtrue;
 		//Com_Printf("defend\n");
 	}
+/*
+	XXX xqx commented out
 	if (ps->persistant[PERS_ASSIST_COUNT] != ops->persistant[PERS_ASSIST_COUNT]) {
 		pushReward(cgs.media.assistSound, cgs.media.medalAssist, ps->persistant[PERS_ASSIST_COUNT]);
 		reward = qtrue;
 		//Com_Printf("assist\n");
 	}
+*/
 	// if any of the player event bits changed
 	if (ps->persistant[PERS_PLAYEREVENTS] != ops->persistant[PERS_PLAYEREVENTS]) {
 		if ((ps->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_DENIEDREWARD) !=

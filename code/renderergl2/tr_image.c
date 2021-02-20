@@ -2408,7 +2408,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			// the white image can be used with any set of parms, but other mismatches are errors
 			if ( strcmp( name, "*white" ) ) {
 				if ( image->flags != flags ) {
-					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
+					ri.Printf( PRINT_DEVELOPER_WHITE, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags ); // XXX xqx added _WHITE
 				}
 			}
 			return image;

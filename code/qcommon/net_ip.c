@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
@@ -110,6 +111,9 @@ static cvar_t	*net_mcast6addr;
 static cvar_t	*net_mcast6iface;
 
 static cvar_t	*net_dropsim;
+// XXX xqx
+static cvar_t	*net_xqdebugCrypto;
+// XXX -xqx
 
 static struct sockaddr	socksRelayAddr;
 
@@ -542,6 +546,57 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 		else
 		{
 
+// XXX xqx
+			// handle traffic decryption
+
+			// 8 first bytes = id of the key used for encryption
+			uint64_t keyid = 0;
+			int idx = 0;
+#ifdef XQ_SERVER
+			memcpy(&keyid, net_message->data, 8);
+			idx += 8;
+			if (!keyid) {
+				Com_Printf("NET_GetPacket: Dropping packet - no keyid.\n");
+				return qfalse;
+			}
+#endif
+
+			char *key = xq_getkeybyid(keyid, net_from);
+			if (!key) {
+				Com_Printf("NET_GetPacket: Dropping packet with keyid %lu\n", keyid);
+				return qfalse; // We do not process packets that we don't know how to decrypt
+			}
+
+
+			// We know the key for the keyid
+			int keylen = strlen(key);
+			if (keylen < 1) {
+				Com_Printf("NET_GetPacket: Dropping packet as key length is 0\n");
+				return qfalse;
+			}
+
+			// 1 byte next - how many bytes have been added to the data for crypto padding
+			int added_len = net_message->data[idx++];
+
+			// rest is the padded, encrypted data
+			// first we decrypt it
+			byte decrypt_buffer[MAX_PACKETLEN+40];
+			memset(decrypt_buffer, 0, MAX_PACKETLEN+40);
+			ret -= idx;
+			memcpy(net_message->data, net_message->data+idx, ret);
+			xq_decrypt(net_message->data, ret, key, keylen);
+
+			// decrease length of the data by the padding length
+			ret -= added_len;
+
+			net_from->keyid = keyid;
+			net_from->last_valid_packet_received_ts = time(NULL);
+			if (net_xqdebugCrypto->integer) {
+				Com_Printf("NET_GetPacket: %i bytes total, added_len: %i, real data len: %i, keylen [%li], keyid %lu\n",
+					ret, added_len,  ret, strlen(key), keyid);
+			}
+// XXX -xqx
+
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
 			if ( usingSocks && memcmp( &from, &socksRelayAddr, fromlen ) == 0 ) {
@@ -659,6 +714,45 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	if(to.type == NA_MULTICAST6 && (net_enabled->integer & NET_DISABLEMCAST))
 		return;
 
+// XXX xqx
+// encrypt before sending
+	byte pad_buffer[MAX_PACKETLEN+20];
+	memset(pad_buffer, 0, MAX_PACKETLEN+20);
+	int real_data_length = length;
+	uint32_t added_len = xq_crypto_pad(pad_buffer, (byte *)data, length, MAX_PACKETLEN+20); 
+
+	length += added_len;
+	if (strlen(to.key) < 1) {
+		return;
+	}
+	xq_encrypt(pad_buffer, length, to.key, strlen(to.key));
+
+	byte newdata[MAX_PACKETLEN+40];
+	memset(newdata, 0, MAX_PACKETLEN+40);
+	int idx = 0;
+#ifndef XQ_SERVER
+	memcpy(newdata, &to.keyid, 8);
+	idx += 8;
+#endif
+	newdata[idx++] = added_len;
+	memcpy(newdata+idx, pad_buffer, length);
+
+	length += idx;
+
+	if (net_xqdebugCrypto->integer) {
+		Com_Printf("Sys_SendPacket: %i bytes total, added_len: %i, real data length: %i, keylen: [%li], keyid %lu\n",
+			length, added_len, real_data_length, strlen(to.key), to.keyid);
+	}
+	int keylen = strlen(to.key);
+	if (keylen < 1) {
+		if (net_xqdebugCrypto->integer) {
+			Com_Printf("Sys_SendPacket: Dropping packet as key length is 0\n");
+			return;
+		}
+	}
+
+// XXX -xqx
+
 	memset(&addr, 0, sizeof(addr));
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
@@ -669,14 +763,14 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		socksBuf[3] = 1;	// address type: IPV4
 		*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
 		*(short *)&socksBuf[8] = ((struct sockaddr_in *)&addr)->sin_port;
-		memcpy( &socksBuf[10], data, length );
+		memcpy( &socksBuf[10], newdata, length );
 		ret = sendto( ip_socket, socksBuf, length+10, 0, &socksRelayAddr, sizeof(socksRelayAddr) );
 	}
 	else {
 		if(addr.ss_family == AF_INET)
-			ret = sendto( ip_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
+			ret = sendto( ip_socket, newdata, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
 		else if(addr.ss_family == AF_INET6)
-			ret = sendto( ip6_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
+			ret = sendto( ip6_socket, newdata, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 	}
 	if( ret == SOCKET_ERROR ) {
 		int err = socketError;
@@ -1384,7 +1478,7 @@ void NET_OpenIP( void ) {
 
 	if(net_enabled->integer & NET_ENABLEV4)
 	{
-		for( i = 0 ; i < 10 ; i++ ) {
+		for( i = 0 ; i < 100 ; i++ ) { // XXX xqx changed 10 to 100 so we can launch a ton of test clients on the same comp if needed
 			ip_socket = NET_IPSocket( net_ip->string, port + i, &err );
 			if (ip_socket != INVALID_SOCKET) {
 				Cvar_SetValue( "net_port", port + i );
@@ -1479,6 +1573,9 @@ static qboolean NET_GetCvars( void ) {
 	net_socksPassword->modified = qfalse;
 
 	net_dropsim = Cvar_Get("net_dropsim", "", CVAR_TEMP);
+// XXX xqx
+	net_xqdebugCrypto = Cvar_Get("net_xqdebugCrypto", "", CVAR_TEMP);
+// XXX -xqx
 
 	return modified ? qtrue : qfalse;
 }

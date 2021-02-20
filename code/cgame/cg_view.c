@@ -333,9 +333,10 @@ static void CG_OffsetFirstPersonView( void ) {
 
 	// if dead, fix the angle and don't add any kick
 	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 ) {
-		angles[ROLL] = 40;
-		angles[PITCH] = -15;
-		angles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
+		angles[ROLL] = 0; // XXX xqx 40 > 0
+		angles[PITCH] = 90; // XXX xqx -15 > 90
+		//angles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW]; // XXX xqx commented out
+		angles[2] = (cg.time / 100.0 ); // XXX xqx - added
 		origin[2] += cg.predictedPlayerState.viewheight;
 		return;
 	}
@@ -674,7 +675,7 @@ static int CG_CalcViewValues( void ) {
 		}
 	}
 
-	if ( cg.renderingThirdPerson ) {
+	if ( cg.renderingThirdPerson && (cg.snap->ps.stats[STAT_HEALTH] >= 1)) { // XXX xqx added 2nd condition
 		// back away from character
 		CG_OffsetThirdPersonView();
 	} else {
@@ -802,7 +803,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// decide on third person view
 	cg.renderingThirdPerson = cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR
-							&& (cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0));
+							&& (cg_thirdPerson.integer); //|| (cg.snap->ps.stats[STAT_HEALTH] <= 0)); // XXX xqx commented out
 
 	// build cg.refdef
 	inwater = CG_CalcViewValues();
@@ -866,6 +867,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			trap_Cvar_Set("timescale", va("%f", cg_timescale.value));
 		}
 	}
+// XXX xqx
+	xq_Frame();
+// XXX -xqx
 
 	// actually issue the rendering calls
 	CG_DrawActive( stereoView );

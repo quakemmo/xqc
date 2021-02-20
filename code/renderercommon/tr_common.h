@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_public.h"
 #include "qgl.h"
+#include "tr_xq.h" // XXX xqx
 
 typedef enum
 {
@@ -114,6 +115,9 @@ extern cvar_t *r_ext_max_anisotropy;
 extern cvar_t *r_stereoEnabled;
 
 extern	cvar_t	*r_saveFontData;
+// XXX xqx
+extern	cvar_t	*r_xqdebugTShader;
+// XXX -xqx
 
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
@@ -126,6 +130,10 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 void R_IssuePendingRenderCommands( void );
 qhandle_t		 RE_RegisterShaderLightMap( const char *name, int lightmapIndex );
 qhandle_t		 RE_RegisterShader( const char *name );
+// XXX xqx
+qhandle_t		 RE_XQ_TShader(const char *name, int level);
+void			 RE_XQ_ScreenShotZoning(void);
+// XXX -xqx
 qhandle_t		 RE_RegisterShaderNoMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage);
 

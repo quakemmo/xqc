@@ -720,7 +720,7 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 		case DT_OK_CANCEL: uType = MB_ICONWARNING|MB_OKCANCEL; break;
 	}
 
-	switch( MessageBox( NULL, message, title, uType ) )
+	switch( MessageBox( NULL, message, title, uType|MB_DEFBUTTON2 ) ) // XXX xqx added defbutton2
 	{
 		default:
 		case IDOK:      return DR_OK;

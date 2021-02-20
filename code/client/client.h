@@ -42,7 +42,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
 
-#define	RETRANSMIT_TIMEOUT	3000	// time between connection packet retransmits
+#define	RETRANSMIT_TIMEOUT	10000	// time between connection packet retransmits // XXX xqx changed from 3000 to 10000
 
 // snapshots are a view of the server at a given time
 typedef struct {
@@ -158,7 +158,19 @@ demo through a file.
 */
 
 #define MAX_TIMEDEMO_DURATIONS	4096
+// XXX xqx
 
+// This should be at least as much as the total number of items
+// that a player can possible see at once, including all container
+// content, presuming trade to another PC window is up and both parties
+// filled it with full containers.
+#define XQ_MAX_ITEM_QUEUE 500 
+typedef struct {
+	xq_item_t item;
+	int	asked;
+	uint32_t ts;
+} xq_item_slot_t;
+// XXX -xqx
 typedef struct {
 
 	connstate_t	state;				// connection status
@@ -268,6 +280,9 @@ typedef struct {
 
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t	netchan;
+// XXX xqx
+	xq_item_slot_t xq_items[XQ_MAX_ITEM_QUEUE];
+// XXX -xqx
 } clientConnection_t;
 
 extern	clientConnection_t clc;
@@ -387,6 +402,20 @@ extern	cvar_t	*cl_anglespeedkey;
 
 extern	cvar_t	*cl_sensitivity;
 extern	cvar_t	*cl_freelook;
+// XXX xqx
+extern  cvar_t  *cl_headless;
+extern  cvar_t  *cl_xq_mousemode;
+extern  cvar_t  *cl_xq_mouselook; // We're in RPG mode but hold right click down on the 3D scene - this gives us a quick temporary mouselook without setting cl_xq_mousemode
+extern  cvar_t  *cl_xq_amount_picker_running;
+extern  cvar_t  *cl_xq_chat_x;
+extern  cvar_t  *cl_xq_chat_y;
+extern  cvar_t  *cl_xq_chat_w;
+extern  cvar_t  *cl_xq_chat_h;
+extern  cvar_t  *cl_xq_chat_type_x;
+extern  cvar_t  *cl_xq_chat_type_y;
+extern  cvar_t  *cl_xq_serverip;
+extern  cvar_t  *xq_debugInfo;
+// XXX -xqx
 
 extern	cvar_t	*cl_mouseAccel;
 extern	cvar_t	*cl_mouseAccelOffset;
@@ -549,7 +578,15 @@ void Con_ToggleConsole_f (void);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);
 void Con_RunConsole (void);
-void Con_DrawConsole (void);
+// XXX xqx added arg
+void Con_DrawConsole (int notify);
+void CL_Reconnect_f(void);
+void CL_KeyUpEvent( int key, unsigned time );
+void CL_XQ_MouselookToggle(int on);
+void CL_XQ_ClearKeys(void);
+int CL_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies);
+
+// XXX -xqx
 void Con_PageUp( void );
 void Con_PageDown( void );
 void Con_Top( void );
@@ -580,6 +617,22 @@ void	SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean
 void	SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
 void	SCR_DrawSmallChar( int x, int y, int ch );
 
+// XXX xqx
+void	xq_SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );           // draws a string with embedded color control characters with fade
+void	xq_SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape ); // ignores embedded color control characters
+void	xq_SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
+void	xq_SCR_DrawTinyStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
+void	xq_SCR_DrawSmallChar( int x, int y, int ch );
+void	xq_SCR_DrawTinyChar( int x, int y, int ch );
+void	xq_SCR_DrawChar( int x, int y, int width, int height, int ch );
+void	xq_SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
+void	xq_SCR_DrawStringExtAssymetric( int x, int y, float sizew, float sizeh, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
+void	xq_write_to_logfile(char *msg, char *filename);
+void	xq_pers_init(void);
+int		xq_pers_get_i64(char *name, int64_t *ret);
+int		xq_pers_set_i64(char *name, int64_t val);
+int64_t	xq_get_keys(void);
+// XXX -xqx
 
 //
 // cl_cin.c

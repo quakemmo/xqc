@@ -36,6 +36,11 @@ char *svc_strings[256] = {
 	"svc_EOF",
 	"svc_voipSpeex",
 	"svc_voipOpus",
+// XXX xqx
+    "svc_iteminfo",
+    "svc_spellinfo",
+    "svc_infoinfo",
+// XXX -xqx
 };
 
 void SHOWNET( msg_t *msg, char *s) {
@@ -692,6 +697,201 @@ static void CL_PlayVoip(int sender, int samplecnt, const byte *data, int flags)
 	}
 }
 
+// XXX xqx
+static qboolean cookiePresent(int c, xq_cmdCookie_t *cookies) {
+	if (c == 0) {
+		return 1;
+	}
+
+	for (int i = 0;  i < XQ_CMDCOOKIES_MAX;  i++) {
+		if (cookies[i].cookie == c) {
+            return 1;
+        }
+    }
+	return 0;
+}
+int CL_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies) {
+	// Pop an item from the queue
+
+	for (int i = 0;  i < XQ_MAX_ITEM_QUEUE;  i++) {
+		xq_item_slot_t *slot = &clc.xq_items[i];
+		if (slot->item.id == 0) continue;
+
+
+		// If the item has a cmdCookie value, make sure we have seen that cookie
+		// before - otherwise, do not process that item.
+		// We do this because we w
+		if (slot->item.cmdCookie != 0) {
+			if (!cookiePresent(slot->item.cmdCookie, cookies)) {
+				continue;
+			}
+		}
+
+
+
+		memcpy(fill, &slot->item, sizeof(xq_item_t));
+		if (i < (XQ_MAX_ITEM_QUEUE-1)) {
+			memcpy(&clc.xq_items[i], &clc.xq_items[i+1], sizeof(xq_item_slot_t) * ((XQ_MAX_ITEM_QUEUE-i)-1));
+		}
+
+		memset(&clc.xq_items[XQ_MAX_ITEM_QUEUE-1], 0, sizeof(xq_item_slot_t));
+		return 1;
+	}
+	return 0; // queue empty
+}
+static void CL_ParseItemInfo (msg_t *msg) {
+	static xq_item_t item;
+	memset(&item, 0, sizeof(item));
+	item.id = XQ64(MSG_ReadLong(msg), MSG_ReadLong(msg));
+	item.cmdCookie = MSG_ReadLong(msg);
+	if (xq_debugInfo->integer) {
+		Com_Printf("CL_ParseItemInfo: got item %li\n", item.id);
+	}
+
+	const int namelen = MSG_ReadShort(msg);
+
+	MSG_ReadData(msg, &item.name, namelen);
+
+	item.icon = MSG_ReadShort(msg);
+	item.slot = MSG_ReadLong(msg);
+	item.hp = MSG_ReadLong(msg);
+	item.mana = MSG_ReadLong(msg);
+	item.endurance = MSG_ReadLong(msg);
+	item.energy = MSG_ReadLong(msg);
+	item.charges = MSG_ReadShort(msg);
+	item.max_charges = MSG_ReadShort(msg);
+	item.container_slots = MSG_ReadShort(msg);
+	item.container_slot_1 = MSG_ReadLongLong(msg);
+	item.container_slot_2 = MSG_ReadLongLong(msg);
+	item.container_slot_3 = MSG_ReadLongLong(msg);
+	item.container_slot_4 = MSG_ReadLongLong(msg);
+	item.container_slot_5 = MSG_ReadLongLong(msg);
+	item.container_slot_6 = MSG_ReadLongLong(msg);
+	item.container_slot_7 = MSG_ReadLongLong(msg);
+	item.container_slot_8 = MSG_ReadLongLong(msg);
+	item.container_slot_9 = MSG_ReadLongLong(msg);
+	item.container_slot_10 = MSG_ReadLongLong(msg);
+
+	item.amount = MSG_ReadShort(msg);
+	item.stackable = MSG_ReadShort(msg);
+	item.nodrop = MSG_ReadByte(msg);
+	item.lore = MSG_ReadByte(msg);
+	item.expendable = MSG_ReadByte(msg);
+	item.norent = MSG_ReadByte(msg);
+	item.tradeskill = MSG_ReadByte(msg);
+
+	item.str = MSG_ReadShort(msg);
+	item.weight = MSG_ReadByte(msg);
+	item.weight_reduction = MSG_ReadByte(msg);
+	item.spell_scroll = MSG_ReadShort(msg);
+	item.clicky_spell = MSG_ReadShort(msg);
+	item.clicky_spell_target = MSG_ReadShort(msg);
+	item.casting_time = MSG_ReadShort(msg);
+
+	item.mr = MSG_ReadShort(msg);
+	item.fr = MSG_ReadShort(msg);
+	item.cr = MSG_ReadShort(msg);
+	item.pr = MSG_ReadShort(msg);
+	item.dr = MSG_ReadShort(msg);
+	item.psr = MSG_ReadShort(msg);
+	item.ac = MSG_ReadShort(msg);
+	item.atk = MSG_ReadShort(msg);
+
+	item.skillup_skill = MSG_ReadShort(msg);
+	item.skillup_minskill = MSG_ReadShort(msg);
+	item.skillup_maxskill = MSG_ReadShort(msg);
+
+	item.food = MSG_ReadShort(msg);
+	item.water = MSG_ReadShort(msg);
+	const int booklen = MSG_ReadShort(msg);
+
+	MSG_ReadData(msg, &item.book, booklen);
+
+	item.weapon_skill = MSG_ReadShort(msg);
+	item.weapon_damage = MSG_ReadShort(msg);
+	item.weapon_delay = MSG_ReadShort(msg);
+	item.weapon_energycost = MSG_ReadShort(msg);
+	item.weapon_proc_fire = MSG_ReadShort(msg);
+	item.weapon_proc_fire_level = MSG_ReadShort(msg);
+	item.weapon_proc_impact = MSG_ReadShort(msg);
+	item.weapon_proc_impact_level = MSG_ReadShort(msg);
+	item.weapon_proc_explode = MSG_ReadShort(msg);
+	item.weapon_proc_explode_level = MSG_ReadShort(msg);
+
+	item.worn_spell = MSG_ReadShort(msg);
+	item.worn_spell_minlvl = MSG_ReadShort(msg);
+	item.equip_minlvl = MSG_ReadShort(msg);
+	item.clicky_mustequip = MSG_ReadShort(msg);
+	item.classes = MSG_ReadLong(msg);
+	item.races = MSG_ReadLong(msg);
+
+	if (xq_debugInfo->integer) {
+		Com_Printf("CL_ParseItemInfo: got item name [%s], stackable: %i, amount %i, charges %i, lore: %i for id %li\n",
+			item.name, item.stackable, item.amount, item.charges, item.lore, item.id);
+	}
+
+
+	// We're adding the item to a local queue of items that will be pulled out of the queue and processed
+	// by the cgame each frame.
+	for (int i = 0;  i < XQ_MAX_ITEM_QUEUE;  i++) {
+		xq_item_slot_t *slot = &clc.xq_items[i];
+		if (slot->item.id == 0 || ((time(NULL) - slot->ts) > 10)) { // entries older than 10 seconds are overwritten
+			slot->item = item;
+			slot->ts = time(NULL);
+			break;
+		}
+	}
+
+
+	// In addition to the above, we immediately send the item to the cgame cache
+	// (for good measure, this is probably unnecessary except some edge cases?)
+	// At any rate it cannot hurt.
+	VM_Call(cgvm, CG_XQ_ITEMINFO, S64_1((uint64_t)&item), S64_2((uint64_t)&item));
+}
+static void CL_ParseSpellInfo (msg_t *msg) {
+	static xq_spell_t spell;
+	memset(&spell, 0, sizeof(spell));
+
+	spell.id = MSG_ReadLong(msg);
+
+	const int namelen = MSG_ReadShort(msg);
+	MSG_ReadData(msg, &spell.name, namelen);
+
+	for (int i = 0;  i < XQ_CLASSES;  i++) {
+		spell.minlevel[i] = MSG_ReadShort(msg);
+	}
+
+	spell.gem_icon = MSG_ReadShort(msg);
+	spell.effect_icon = MSG_ReadShort(msg);
+	spell.beneficial = MSG_ReadShort(msg);
+	spell.casting_time = MSG_ReadShort(msg);
+	spell.target = MSG_ReadShort(msg);
+	spell.mana = MSG_ReadShort(msg);
+
+	const int desclen = MSG_ReadShort(msg);
+	MSG_ReadData(msg, &spell.description, desclen);
+	spell.maxrange = MSG_ReadShort(msg);
+
+	if (xq_debugInfo->integer) {
+		Com_Printf("CL_ParseSpellInfo: %i, %s, %i, %i\n", spell.id, spell.name, spell.gem_icon, spell.effect_icon);
+	}
+	VM_Call(cgvm, CG_XQ_SPELLINFO, S64_1((uint64_t)&spell), S64_2((uint64_t)&spell));
+}
+static void CL_ParseInfoInfo (msg_t *msg) {
+	static xq_info_t info;
+	memset(&info, 0, sizeof(info));
+
+	info.len = MSG_ReadLong(msg);
+	info.id1 = MSG_ReadLong(msg);
+	info.id2 = MSG_ReadLong(msg);
+	info.id3 = MSG_ReadLong(msg);
+	info.id4 = MSG_ReadLong(msg);
+	MSG_ReadData(msg, &info.data, info.len);
+
+	VM_Call(cgvm, CG_XQ_INFOINFO, S64_1((uint64_t)&info), S64_2((uint64_t)&info));
+}
+// XXX -xqx
+
 /*
 =====================
 CL_ParseVoip
@@ -926,6 +1126,17 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			CL_ParseVoip( msg, !clc.voipEnabled );
 #endif
 			break;
+// XXX xqx
+		case svc_iteminfo:
+			CL_ParseItemInfo(msg);
+			break;
+		case svc_spellinfo:
+			CL_ParseSpellInfo(msg);
+			break;
+		case svc_infoinfo:
+			CL_ParseInfoInfo(msg);
+			break;
+// XXX -xqx
 		}
 	}
 }

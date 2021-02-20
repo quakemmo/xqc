@@ -18,7 +18,8 @@
 !include MultiUser.nsh
 
 !include "MUI2.nsh"
-!define MUI_ICON "../quake3.ico"
+; XXX xqx quake3 > xq
+!define MUI_ICON "../xq.ico"
 
 ; The name of the installer
 Name "ioquake3"

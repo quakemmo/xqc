@@ -342,7 +342,7 @@ extern void UI_Message( const char **lines );
 // ui_setup.c
 //
 extern void UI_SetupMenu_Cache( void );
-extern void UI_SetupMenu(void);
+extern void UI_SetupMenu(qboolean ingame); // XXX xqx added param
 
 //
 // ui_team.c
@@ -488,6 +488,7 @@ typedef struct {
 
 	qboolean		fixedlegs;		// true if legs yaw is always the same as torso yaw
 	qboolean		fixedtorso;		// true if torso never changes yaw
+
 
 	qhandle_t		weaponModel;
 	qhandle_t		barrelModel;
@@ -804,5 +805,14 @@ void UI_SignupMenu( void );
 //
 void RankStatus_Cache( void );
 void UI_RankStatusMenu( void );
+
+// XXX xqx
+//
+// ui_xq_charsel.c
+//
+void UI_XQCharsel_Cache(void);
+void UI_XQCharselMenu(char *);
+extern void UI_XQCharselnMenu_f(char *);
+// XXX -xqx
 
 #endif
