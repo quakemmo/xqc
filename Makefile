@@ -1606,7 +1606,7 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3LCCOBJ) $(TOOLS_LIBS)
 
 $(STRINGIFY): $(TOOLSDIR)/stringify.c
-	$(echo_cmd) "TOOLSCC $@"
+	$(echo_cmd) "TOOLS_CC $@"
 	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(TOOLSDIR)/stringify.c $(TOOLS_LIBS)
 
 define DO_Q3LCC
