@@ -310,19 +310,19 @@ static void sound_arbiter(centity_t *cent, int torso_anim, int leg_anim, vec3_t 
 	switch (torso_anim) { 
 		case XQ_ANIM_IDLE:
 			if (idle_variety == 2) {
-				xq_OptSound(NULL, centnum, CHAN_VOICE, "*altidle.wav", 0);
+				xq_OptSound(NULL, centnum, CHAN_BODY, "*altidle.wav", 0);
 			}
 			break;
 		case XQ_ANIM_CAST:
-			xq_OptSound(NULL, centnum, CHAN_VOICE, "*casted.wav", 0);
+			xq_OptSound(NULL, centnum, CHAN_BODY, "*casted.wav", 0);
 			break;
 		case XQ_ANIM_MELEE:
-			xq_OptSound(NULL, centnum, CHAN_VOICE, "*melee.wav", 0);
+			xq_OptSound(NULL, centnum, CHAN_BODY, "*melee.wav", 0);
 			break;
 		case XQ_ANIM_PAIN:
 			if ((cg.time - cent->xq_last_painsound_ts) > XQ_SOUND_PAIN_MIN_DELAY) {
 				cent->xq_last_painsound_ts = cg.time;
-				xq_OptSound(NULL, centnum, CHAN_VOICE, "*pain100.wav", 0);
+				xq_OptSound(NULL, centnum, CHAN_BODY, "*pain100.wav", 0);
 			}
 			break;
 		default:
