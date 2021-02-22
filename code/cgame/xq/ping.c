@@ -126,7 +126,7 @@ void xq_ping(void) {
 		memset(&si, 0, sizeof(si));
 
 		
-		char hostbuf[30];
+		char hostbuf[50];
 		trap_Cvar_VariableStringBuffer("cl_currentServerAddress", hostbuf, sizeof(hostbuf));
 		if (strchr(hostbuf, ':')) {
 			*(strchr(hostbuf, ':')) = 0;
