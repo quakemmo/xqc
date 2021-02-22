@@ -33,8 +33,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define BASEGAME					"xq"
   #define CLIENT_WINDOW_TITLE     	"Quake MMO"
   #define CLIENT_WINDOW_MIN_TITLE 	"Quake MMO"
-  #define HOMEPATH_NAME_UNIX		"Quake MMO"
-  #define HOMEPATH_NAME_WIN			"Quake MMO"
+  #define HOMEPATH_NAME_UNIX		"quakemmo"
+  #define HOMEPATH_NAME_WIN			"quakemmo"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
 //  #define STEAMPATH_NAME                     "Foo Bar"
 //  #define STEAMPATH_APPID         ""
