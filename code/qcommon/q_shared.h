@@ -31,14 +31,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef STANDALONE
   #define PRODUCT_NAME				"xq"
   #define BASEGAME					"xq"
-  #define CLIENT_WINDOW_TITLE     	"xquake"
-  #define CLIENT_WINDOW_MIN_TITLE 	"xquake"
-  #define HOMEPATH_NAME_UNIX		"xquake"
-  #define HOMEPATH_NAME_WIN			"xquake"
+  #define CLIENT_WINDOW_TITLE     	"Quake MMO"
+  #define CLIENT_WINDOW_MIN_TITLE 	"Quake MMO"
+  #define HOMEPATH_NAME_UNIX		"Quake MMO"
+  #define HOMEPATH_NAME_WIN			"Quake MMO"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
 //  #define STEAMPATH_NAME                     "Foo Bar"
 //  #define STEAMPATH_APPID         ""
-  #define GAMENAME_FOR_MASTER		"xquake"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"quakemmo"	// must NOT contain whitespace
   #define CINEMATICS_LOGO		"foologo.roq"
   #define CINEMATICS_INTRO		"intro.roq"
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game

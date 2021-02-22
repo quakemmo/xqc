@@ -1,14 +1,15 @@
 ABOUT
 =====
 
-XQuake is an experimental fork of Ioquake3.
+Quake MMO is an attempt of adding MMO-like features to Quake3.
+
 The original Ioquake3 README.md has been moved to README-ioq3.md.
 
 
 
 CONTACT
 =======
-Suggestions are welcome at extendedquake@gmail.com
+Suggestions are welcome at quakemmo@gmail.com
 Discord server: https://discord.gg/DPhhktJ5ZC
 
 
