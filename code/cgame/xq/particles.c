@@ -98,7 +98,7 @@ static void addFx(centity_t *cent, int anim, int type, int sound) {
 				snprintf(path, MAX_QPATH, "sound/spells/cast/%i.wav", p->sound);
 				sfxHandle_t h = trap_S_RegisterSound(path, qfalse);
 				//trap_S_AddLoopingSound(centnum, cent->lerpOrigin, cent->lerpOrigin, h);
-				trap_S_StartSound(NULL, centnum, CHAN_AUTO, h);
+				trap_S_StartSound(NULL, centnum, CHAN_CASTING, h);
 			}
 		}
 	}

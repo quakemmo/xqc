@@ -1108,6 +1108,7 @@ typedef enum {
 	CHAN_VOICE,
 	CHAN_ITEM,
 	CHAN_BODY,
+	CHAN_CASTING, // XXX xqx
 	CHAN_LOCAL_SOUND,	// chat messages, etc
 	CHAN_ANNOUNCER		// announcer voices, etc
 } soundChannel_t;
