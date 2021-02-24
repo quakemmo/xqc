@@ -1615,7 +1615,9 @@ static void PM_Weapon( void ) {
 	// again if lowering or raising
 	if ( pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING ) {
 		if ( pm->ps->weapon != pm->cmd.weapon ) {
-			PM_BeginWeaponChange( pm->cmd.weapon );
+			if (!(pm->ps->xq_flags & XQ_STUNNED)) { // XXX xqx added condition
+				PM_BeginWeaponChange( pm->cmd.weapon );
+			}
 		}
 	}
 
@@ -1979,6 +1981,10 @@ void PmoveSingle (pmove_t *pmove) {
 
 	if (pm->ps->xq_flags & XQ_STUNNED) {
 		pm->ps->speed = 0;
+		pm->cmd.forwardmove = 0;
+		pm->cmd.rightmove = 0;
+		pm->cmd.upmove = 0;
+		pm->cmd.buttons &= ~BUTTON_ATTACK;
 	}
 
 
@@ -2024,7 +2030,9 @@ void PmoveSingle (pmove_t *pmove) {
 
 	// update the viewangles
 	if (!pm->ps->xq_looting && !pm->ps->xq_sitting && pm->ps->pm_type != PM_DEAD) { // XXX xqx added contitions
-		PM_UpdateViewAngles( pm->ps, &pm->cmd );
+		if (!(pm->ps->xq_flags & XQ_STUNNED)) {
+			PM_UpdateViewAngles( pm->ps, &pm->cmd );
+		}
 	}
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
