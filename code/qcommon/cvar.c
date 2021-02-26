@@ -617,6 +617,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	var->string = CopyString(value);
 	var->value = atof (var->string);
 	var->integer = atoi (var->string);
+	var->int64 = S64(var->string); // XXX xqx
 
 	return var;
 }
