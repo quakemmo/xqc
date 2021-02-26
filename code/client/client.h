@@ -414,6 +414,13 @@ extern  cvar_t  *cl_xq_chat_h;
 extern  cvar_t  *cl_xq_chat_type_x;
 extern  cvar_t  *cl_xq_chat_type_y;
 extern  cvar_t  *cl_xq_serverip;
+extern  cvar_t  *cl_crypto_key;
+extern  cvar_t  *cl_acctname;
+extern  cvar_t  *cl_crypto_keyid;
+extern  cvar_t  *cl_devpassword;
+extern  cvar_t  *cl_devauthpath;
+extern  cvar_t  *cl_devauthscheme;
+extern  cvar_t  *cl_patcherpath;
 extern  cvar_t  *xq_debugInfo;
 // XXX -xqx
 
@@ -584,7 +591,8 @@ void CL_Reconnect_f(void);
 void CL_KeyUpEvent( int key, unsigned time );
 void CL_XQ_MouselookToggle(int on);
 void CL_XQ_ClearKeys(void);
-int CL_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies);
+int	 CL_XQ_GetItemFromQueue(xq_item_t *fill, xq_cmdCookie_t *cookies);
+void CL_XQ_DevAuth(void);
 
 // XXX -xqx
 void Con_PageUp( void );

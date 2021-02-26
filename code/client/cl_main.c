@@ -92,6 +92,13 @@ cvar_t	*cl_xq_chat_h;
 cvar_t	*cl_xq_chat_type_x;
 cvar_t	*cl_xq_chat_type_y;
 cvar_t	*cl_xq_serverip;
+cvar_t	*cl_crypto_keyid;
+cvar_t	*cl_crypto_key;
+cvar_t	*cl_devpassword;
+cvar_t	*cl_devauthpath;
+cvar_t	*cl_devauthscheme;
+cvar_t	*cl_patcherpath;
+cvar_t	*cl_acctname;
 cvar_t	*xq_debugInfo;
 // XXX -xqx
 cvar_t	*cl_sensitivity;
@@ -3690,8 +3697,22 @@ void CL_Init( void ) {
 	Cvar_Get ("password", "", CVAR_USERINFO);
 */
 // XXX xqx
-	Cvar_Get ("cl_acctname", "", CVAR_USERINFO );
-	Cvar_Get ("cl_crypto_keyid", "", CVAR_USERINFO );
+	cl_devauthpath = Cvar_Get ("cl_devauthpath", "", CVAR_USERINFO );
+	cl_devauthscheme = Cvar_Get ("cl_devauthscheme", "", CVAR_USERINFO );
+	cl_patcherpath = Cvar_Get ("cl_patcherpath", "", CVAR_USERINFO );
+	cl_devpassword = Cvar_Get ("cl_devpassword", "", CVAR_USERINFO );
+	cl_acctname = Cvar_Get ("cl_acctname", "", CVAR_USERINFO );
+	cl_crypto_keyid = Cvar_Get ("cl_crypto_keyid", "", CVAR_USERINFO );
+	cl_crypto_key = Cvar_Get ("cl_crypto_key", "", CVAR_TEMP );
+	int gotauth = 0;
+	if (cl_crypto_keyid && cl_crypto_keyid->string[0]) {
+		if (cl_crypto_key && cl_crypto_key->string[0]) {
+			gotauth = 1;
+		}
+	}
+	if (!gotauth) {
+		CL_XQ_DevAuth();
+	}
 	Cvar_Get ("cl_charname", "", CVAR_USERINFO );
 // XXX -xqx
 
