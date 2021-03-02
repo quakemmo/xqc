@@ -208,7 +208,7 @@ void qw_AttachWithBorder(qw_window_t *win, qw_obj_attach_t *att, int *x, int *y)
 	*y += (win->y + QW_WIN_BORDER_WIDTH);
 }
 void qw_Render(void) {
-	uint64_t st_time = xq_usec();
+	uint64_t st_time = xq_msec();
 
 	int i, cnt = 0;
 	static int sorted[QW_MAX_WINDOWS];
@@ -238,9 +238,11 @@ void qw_Render(void) {
 	xq_debdisp_draw();
 
 
-	uint64_t en_time = xq_usec();
-	if (cg_qwBench.integer) {
-		xq_clog(COLOR_WHITE, "QWIN took %lu usec to finish", en_time - st_time);
+	uint64_t en_time = xq_msec();
+	if (cg_qwBench.integer > 0) {
+		if (cg_qwBench.integer < en_time - st_time) {
+			xq_clog(COLOR_WHITE, "QWIN took %lu msec to finish", en_time - st_time);
+		}
 	}
 }
 void qw_Init(void) {

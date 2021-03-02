@@ -92,7 +92,7 @@ static void ChatWinCvars(void) {
 static void FrameTime(void) {
 	if (xq_printFrameTime.integer) {
 		static uint64_t last = 0, now = 0;
-		now = xq_usec();
+		now = xq_msec();
 		if (last != 0) {
 
 			int64_t change = now - last;

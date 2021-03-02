@@ -594,6 +594,7 @@ typedef enum xq_anim_s {
 } xq_anim_t;
 
 int xq_anim_to_q3(xq_anim_t xqanim, int torso, int idle_variety);
+uint64_t xq_msec_new(void);
 uint64_t xq_msec(void);
 uint64_t xq_usec(void);
 char *xq_since_start(uint64_t start_msec);

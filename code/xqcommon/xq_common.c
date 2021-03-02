@@ -1,4 +1,4 @@
-#include <sys/time.h>
+#include <sys/timeb.h>
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "../game/bg_public.h"
@@ -40,16 +40,10 @@ char *xq_RezName(playerState_t *ps) {
 	readName(&ps->xq_rez_author_1, 5, buf);
 	return (char *)buf;
 }
-
 uint64_t xq_msec() {
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return (int64_t)(((double)t.tv_sec*1000000 + (double)t.tv_usec) / 1000);
-}
-uint64_t xq_usec() {
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return (int64_t)(((double)t.tv_sec*1000000 + (double)t.tv_usec));
+	struct timeb t;
+	ftime(&t);
+	return t.time * 1000 + t.millitm;
 }
 char * xq_since_start(uint64_t start_time) {
 	static char ret[30];
