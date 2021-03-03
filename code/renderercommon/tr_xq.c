@@ -84,12 +84,14 @@ SDL_Surface *tr_XQ_FBMP(const char *c, int level) {
 		color.r = 42;
 		color.g = 143;
 		color.b = 129;
+		color.a = 255;
 		text = ((char *)c) + 1;
 	} else {
 		// Color for PC
 		color.r = 64;
 		color.g = 82;
 		color.b = 178;
+		color.a = 255;
 		text = (char *)c;
 		npc = 0;
 	}
