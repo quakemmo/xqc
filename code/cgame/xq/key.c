@@ -8,10 +8,10 @@
 
 */
 int xq_KeyStatus(int key) {
-	static qkey_t keys[MAX_KEYS];
+	static qkey_t my_keys[MAX_KEYS];
 	qkey_t *clkeys = (qkey_t *)trap_XQ_Get_Keys();
-	memcpy(keys, clkeys, sizeof(keys));
-	return keys[key].down;
+	memcpy(my_keys, clkeys, sizeof(my_keys));
+	return my_keys[key].down;
 }
 int xq_ShiftPressed() {
 	return xq_KeyStatus(K_SHIFT);
