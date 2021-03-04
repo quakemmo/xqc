@@ -123,7 +123,9 @@ void *CL_xq_txt2sdl(const char *c, int level) {
 			return NULL;
 		}
 	} else {
-		Com_Printf("Level is %i\n", level);
+		if (level > max_levels) {
+			Com_Printf("CL_xq_txt2sdl: Level is %i for %s\n", level, c);
+		}
 	}
 
 
