@@ -248,7 +248,8 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 				return;
 			}
 		}
-		s = "Entering world...";
+		//s = "Entering world...";
+		s = "Zoning, please wait..."; // XXX xqx
 		break;
 	case CA_LOADING:
 		return;
