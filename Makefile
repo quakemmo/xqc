@@ -625,7 +625,7 @@ ifdef MINGW
 
   SHLIBEXT=dll
   SHLIBCFLAGS=
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -lws2_32
+  SHLIBLDFLAGS=-shared $(LDFLAGS) -lws2_32 -static-libgcc
 
   BINEXT=.exe
 
@@ -696,9 +696,11 @@ ifdef MINGW
     CLIENT_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
                       $(LIBSDIR)/win32/libSDL2.dll.a
     RENDERER_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
-                      $(LIBSDIR)/win32/libSDL2.dll.a
+                      $(LIBSDIR)/win32/libSDL2_ttf.a \
+                      $(LIBSDIR)/win32/libSDL2.dll.a \
+                      $(LIBSDIR)/win32/freetype.lib
     SDLDLL=SDL2.dll
-    CLIENT_EXTRA_FILES += $(LIBSDIR)/win32/SDL2.dll
+    CLIENT_EXTRA_FILES += $(LIBSDIR)/win32/SDL2.dll $(LIBSDIR)/win32/freetype.dll
     else
     CLIENT_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
                       $(LIBSDIR)/win64/libSDL264.dll.a
