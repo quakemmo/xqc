@@ -694,8 +694,8 @@ ifdef MINGW
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
     ifeq ($(ARCH),x86)
     CLIENT_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
-                      $(LIBSDIR)/win32/libSDL2.dll.a
                       $(LIBSDIR)/win32/libSDL2_ttf.a \
+                      $(LIBSDIR)/win32/libSDL2.dll.a \
                       $(LIBSDIR)/win32/freetype.lib
     RENDERER_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
                       $(LIBSDIR)/win32/libSDL2.dll.a
