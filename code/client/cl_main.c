@@ -3322,6 +3322,9 @@ void CL_InitRef( void ) {
 	ri.CIN_RunCinematic = CIN_RunCinematic;
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
+// XXX xqx
+	ri.CL_xq_txt2sdl = CL_xq_txt2sdl;
+// XXX -xqx
 
 	ri.IN_Init = IN_Init;
 	ri.IN_Shutdown = IN_Shutdown;

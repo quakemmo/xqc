@@ -608,7 +608,7 @@ qhandle_t RE_XQ_TShader(const char *name, int level) { // set init_done to 1 to 
 
 
 	// Need to create a new shader
-	SDL_Surface *surface = tr_XQ_FBMP(name, level);
+	SDL_Surface *surface = ri.CL_xq_txt2sdl(name, level);
 	if (surface == NULL) {
 		return -1;
 	}

@@ -640,6 +640,7 @@ void	xq_pers_init(void);
 int		xq_pers_get_i64(char *name, int64_t *ret);
 int		xq_pers_set_i64(char *name, int64_t val);
 int64_t	xq_get_keys(void);
+void 	*CL_xq_txt2sdl(const char *c, int level);
 // XXX -xqx
 
 //

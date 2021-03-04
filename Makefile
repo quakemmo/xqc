@@ -695,19 +695,19 @@ ifdef MINGW
     ifeq ($(ARCH),x86)
     CLIENT_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
                       $(LIBSDIR)/win32/libSDL2.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
                       $(LIBSDIR)/win32/libSDL2_ttf.a \
-                      $(LIBSDIR)/win32/libSDL2.dll.a \
                       $(LIBSDIR)/win32/freetype.lib
+    RENDERER_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
+                      $(LIBSDIR)/win32/libSDL2.dll.a
     SDLDLL=SDL2.dll
     CLIENT_EXTRA_FILES += $(LIBSDIR)/win32/SDL2.dll $(LIBSDIR)/win32/freetype.dll
     else
     CLIENT_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
-                      $(LIBSDIR)/win64/libSDL264.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
                       $(LIBSDIR)/win64/libSDL2_ttf.a \
                       $(LIBSDIR)/win64/libSDL264.dll.a \
                       $(LIBSDIR)/win64/freetype.lib
+    RENDERER_LIBS += $(LIBSDIR)/win64/libSDL264main.a \
+                      $(LIBSDIR)/win64/libSDL264.dll.a
     SDLDLL=SDL264.dll
     CLIENT_EXTRA_FILES += $(LIBSDIR)/win64/SDL264.dll $(LIBSDIR)/win64/freetype.dll
     endif
@@ -1789,6 +1789,7 @@ Q3OBJ = \
   \
   $(B)/client/sdl_input.o \
   $(B)/client/sdl_snd.o \
+  $(B)/client/sdl_ttf.o \
   \
   $(B)/client/con_log.o \
   $(B)/client/sys_autoupdater.o \

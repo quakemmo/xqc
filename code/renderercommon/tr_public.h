@@ -184,6 +184,7 @@ typedef struct {
 	void	(*Sys_GLimpSafeInit)( void );
 	void	(*Sys_GLimpInit)( void );
 	qboolean (*Sys_LowPhysicalMemory)( void );
+	void *	(*CL_xq_txt2sdl)(const char *c, int level); // XXX xqx
 } refimport_t;
 
 
