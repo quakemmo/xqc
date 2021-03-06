@@ -69,7 +69,11 @@ void xq_ping(void) {
 		payload[i] = random() * 256;
 	}
 	payload[i] = 0;
-	snprintf(payload, payload_max, "%I64u:%s", keyid, name);
+	#ifdef _WIN32
+		snprintf(payload, payload_max, "%I64u:%s", keyid, name);
+	#else
+		snprintf(payload, payload_max, "%lu:%s", keyid, name);
+	#endif
 
 	byte wbuf[numblocks*16+8+1];
 	int len = numblocks*16+8;
