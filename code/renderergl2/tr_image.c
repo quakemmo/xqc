@@ -2420,6 +2420,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
 	if ( pic == NULL ) {
+		//if (!strcmp(name, "full_rt.tga")) xq_break(); // XXX xqx find out where the missing image errors come from if needed
+		Com_Printf("R_FindImageFile(%s, %i, %i) failed\n", name, type, flags); // XXX xqx added
 		return NULL;
 	}
 

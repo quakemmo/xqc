@@ -1956,7 +1956,6 @@ void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
 // XXX xqx  
-qhandle_t	RE_XQ_TShader(const char *name, int level);
 void		RB_XQName(void);
 // XXX -xqx 
 void		RE_Shutdown( qboolean destroyWindow );

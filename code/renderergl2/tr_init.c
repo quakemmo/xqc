@@ -785,6 +785,13 @@ void R_ScreenShot_f (void) {
 		ri.Printf (PRINT_ALL, "Wrote %s\n", checkname);
 	}
 } 
+// XXX xqx
+void R_ScreenShotZoning_f(void) {
+	// Take a screenshot and write it to a temp file so we can display it during zoning
+	// (but not during the initial zoning upon log in).
+	R_TakeScreenshot(0, 0, glConfig.vidWidth, glConfig.vidHeight, "screenshots/zoning.jpg", qtrue);
+}
+// XXX -xqx
 
 void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
@@ -1386,6 +1393,9 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "modellist", R_Modellist_f );
 	ri.Cmd_AddCommand( "modelist", R_ModeList_f );
 	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
+// XXX xqx
+	ri.Cmd_AddCommand( "screenshotzoning", R_ScreenShotZoning_f );
+// XXX -xqx
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShotJPEG_f );
 	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 	ri.Cmd_AddCommand( "minimize", GLimp_Minimize );
@@ -1619,6 +1629,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.RegisterSkin = RE_RegisterSkin;
 // XXX xqx
 	re.XQ_TShader = RE_XQ_TShader;
+	re.XQ_ScreenShotZoning = R_ScreenShotZoning_f;
 // XXX -xqx
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;

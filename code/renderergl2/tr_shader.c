@@ -3267,6 +3267,19 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 
+	// XXX xqx
+	// The shadername can end in ...#<tintnum>, in which case # and the rest will be stripped off
+	// (after we get the hash, but before we try to actually find the shader text).
+	// This is used to keep several versions of the same shader in the cache, the only difference
+	// being their tint.
+	char untintName[MAX_QPATH] = {0};
+	Q_strncpyz(untintName, strippedName, sizeof(untintName));
+	char *idx = strchr(untintName, '#');
+	if (idx) {
+		*idx = 0;
+	}
+	// XXX -xqx
+
 	//
 	// see if the shader is already loaded
 	//
@@ -3282,12 +3295,12 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
-	InitShader( strippedName, lightmapIndex );
+	InitShader( untintName, lightmapIndex ); // XXX xqx strippedName > untintName
 
 	//
 	// attempt to define shader from an explicit parameter file
 	//
-	shaderText = FindShaderInShaderText( strippedName );
+	shaderText = FindShaderInShaderText( untintName ); // XXX xqx strippedName > untintName
 	if ( shaderText ) {
 		// enable this when building a pak file to get a global list
 		// of all explicit shaders

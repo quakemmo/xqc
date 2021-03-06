@@ -138,6 +138,10 @@ void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 			ri.Error( ERR_FATAL, "R_GetCommandBuffer: bad size %i", bytes );
 		}
 		// if we run out of room, just start dropping commands
+// XXX xqx
+		// We want to know if this happens
+		ri.Printf(PRINT_ALL, "R_GetCommandBufferReserved(%i, %i): out of room, dropping command\n", bytes, reservedBytes);
+// XXX -xqx
 		return NULL;
 	}
 

@@ -2547,8 +2547,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	}
 	// XXX -xqx
 
-
-
 	//
 	// see if the shader is already loaded
 	//
@@ -2564,7 +2562,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
-	InitShader( untintName, lightmapIndex );
+	InitShader( untintName, lightmapIndex ); // XXX xqx strippedName > untintName
 
 	// FIXME: set these "need" values appropriately
 	shader.needsNormal = qtrue;
@@ -2575,7 +2573,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	//
 	// attempt to define shader from an explicit parameter file
 	//
-	shaderText = FindShaderInShaderText( untintName );
+	shaderText = FindShaderInShaderText( untintName ); // XXX xqx strippedName > untintName
 	if ( shaderText ) {
 		// enable this when building a pak file to get a global list
 		// of all explicit shaders

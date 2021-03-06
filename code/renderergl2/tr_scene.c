@@ -135,7 +135,13 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
       since we don't plan on changing the const and making for room for those effects
       simply cut this message to developer only
       */
-			ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polys or r_max_polyverts reached\n");
+			// XXX xqx - reduce spam
+			static int last_warn = 0;
+			if (tr.refdef.time / 1000 > last_warn) {
+				last_warn = tr.refdef.time / 1000;
+				ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polys or r_max_polyverts reached\n");
+			}
+			// XXX xqx
 			return;
 		}
 

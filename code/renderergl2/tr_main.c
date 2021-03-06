@@ -1573,12 +1573,12 @@ static void R_AddEntitySurface (int entityNum)
 
 	// simple generated models, like sprites and beams, are not culled
 	switch ( ent->e.reType ) {
-// XXX xqx
-	case RT_XQNAME:
-// XXX -xqx
 	case RT_PORTALSURFACE:
 		break;		// don't draw anything
 	case RT_SPRITE:
+// XXX xqx
+	case RT_XQNAME:
+// XXX -xqx
 	case RT_BEAM:
 	case RT_LIGHTNING:
 	case RT_RAIL_CORE:
