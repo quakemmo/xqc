@@ -1615,48 +1615,50 @@ Called by the system for both key up and key down events
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
 	// XXX xqx
 
-	// Special case for moving forward by clicking the left mouse button
-	// when in temp mouselook mode.
-	// This requires UpArrow to be set to +forward in mouse mode.
-	if (cl_xq_mousemode->integer && cl_xq_mouselook->integer) {
-		if (key == K_MOUSE1) {
-			if (down) {
-				CL_KeyDownEvent(K_UPARROW, time);
-			} else {
-				CL_KeyUpEvent(K_UPARROW, time);
-			}
-			return;
-		}
-	}
-	if (cl_xq_mousemode->integer) {
-		if (
-					key == K_MOUSE1
-				||  key == K_MOUSE2
-				||  key == K_ESCAPE
-				||  key == '1'
-				||  key == '2'
-				||  key == '3'
-				||  key == '4'
-				||  key == '5'
-				||  key == '6'
-			) {
-			if (cgvm) {
-				VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
-			}
-			if (key != K_ALT) {
+	if (!(Key_GetCatcher() & KEYCATCH_UI)) {
+		// Special case for moving forward by clicking the left mouse button
+		// when in temp mouselook mode.
+		// This requires UpArrow to be set to +forward in mouse mode.
+		if (cl_xq_mousemode->integer && cl_xq_mouselook->integer) {
+			if (key == K_MOUSE1) {
+				if (down) {
+					CL_KeyDownEvent(K_UPARROW, time);
+				} else {
+					CL_KeyUpEvent(K_UPARROW, time);
+				}
 				return;
-            } 
+			}
 		}
-	}
+		if (cl_xq_mousemode->integer) {
+			if (
+						key == K_MOUSE1
+					||  key == K_MOUSE2
+					||  key == K_ESCAPE
+					||  key == '1'
+					||  key == '2'
+					||  key == '3'
+					||  key == '4'
+					||  key == '5'
+					||  key == '6'
+				) {
+				if (cgvm) {
+					VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
+				}
+				if (key != K_ALT) {
+					return;
+				} 
+			}
+		}
 
-	if (cl_xq_mousemode->integer && cl_xq_amount_picker_running->integer) {
-		if (
+		if (cl_xq_mousemode->integer && cl_xq_amount_picker_running->integer) {
+			if (
 				key == K_ENTER
-			||  key == K_BACKSPACE
-			||  (key >= 48 && key <= 57) // 0 - 9
-		) {
-			VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
-			return;
+				||  key == K_BACKSPACE
+				||  (key >= 48 && key <= 57) // 0 - 9
+			) {
+				VM_Call( cgvm, CG_XQ_KEYEVENT, key, time, down, keys[K_SHIFT].down, keys[K_CTRL].down, keys[K_ALT].down);
+				return;
+			}
 		}
 	}
 	// XXX -xqx
