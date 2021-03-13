@@ -541,7 +541,19 @@ typedef struct animation_s {
 	int		reversed;			// true if animation is reversed
 	int		flipflop;			// true if animation should flipflop back to base
 } animation_t;
+// XXX xqx moved from cg_local.h
+typedef enum {
+	FOOTSTEP_NORMAL,
+	FOOTSTEP_BOOT,
+	FOOTSTEP_FLESH,
+	FOOTSTEP_MECH,
+	FOOTSTEP_ENERGY,
+	FOOTSTEP_METAL,
+	FOOTSTEP_SPLASH,
 
+	FOOTSTEP_TOTAL
+} footstep_t;
+// XXX -xqx
 
 // flip the togglebit every time an animation
 // changes so a restart of the same anim can be detected
@@ -753,4 +765,23 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 #define KAMI_SHOCKWAVE_MAXRADIUS		1320
 #define KAMI_BOOMSPHERE_MAXRADIUS		720
 #define KAMI_SHOCKWAVE2_MAXRADIUS		704
+
+#define MAX_CUSTOM_SOUNDS 32
+typedef struct xq_animodel_s {
+    #define         xq_cgame_animodel_t_MAGIC          0xb4b9efd3
+
+	int			magics;
+	int			model_index;
+    int         registered;
+    qhandle_t   handle_head;
+    qhandle_t   handle_torso;
+    qhandle_t   handle_legs;
+    animation_t animations[MAX_TOTALANIMATIONS];
+    sfxHandle_t	sounds[MAX_CUSTOM_SOUNDS];
+    footstep_t  footsteps;
+    qboolean    fixedlegs;
+    qboolean    fixedtorso;
+    gender_t    gender;
+	int			magice;
+} xq_animodel_t;
 

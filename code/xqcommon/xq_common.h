@@ -5,6 +5,7 @@
 
 #define XQ_MAX_PASSWORD_LEN					40
 #define XQ_MAX_CHARS_PER_ACCOUNT			8
+#define XQ_MIN_CHAR_NAME					5
 #define XQ_MAX_CHAR_NAME					12 // Increasing this and the surname requires expanding xq_EntName()
 #define XQ_MAX_CHAR_SURNAME					18
 #define XQ_MAX_GUILD_LEN					20
@@ -323,6 +324,7 @@
 
 #define XQ_MALE							0
 #define XQ_FEMALE						1
+#define XQ_NEUTRAL						2
 
 
 // >>>>>>>>>>>>>>>>>> ADD SOMETHING HERE?  ADD IT TO CHAR CREATION CODE <<<<<<<<<<<<<<<<<<<<<
@@ -414,7 +416,7 @@ typedef struct xq_info_s {
 
 
 
-typedef struct {
+typedef struct xq_item_s {
 	int64_t		id;
 	int			cmdCookie; // Do not process this item until a server command with that cookie has been processed
 	char		name[XQ_ITEM_MAX_NAME+1];
@@ -544,7 +546,7 @@ typedef enum xq_groundspawn_type_e {
 #define XQ_MODEL_MAX_PATH	50
 #define XQ_MAX_MODELS 		100	// Max possible models
 
-typedef enum {
+typedef enum xq_modeltype_e {
 	XQ_MODEL_TYPE_SIMPLE,
 	XQ_MODEL_TYPE_Q3PLAYER
 } xq_modeltype_t;
@@ -559,6 +561,8 @@ typedef struct xq_model_s {
 	int				full_armor;		// 1 means it is a detailed q3 model with surface groups for arms, feet, hands in addition to legs, head and torso (basically a playable race).
 	vec3_t			npc_mins;
 	vec3_t			npc_maxs;
+	int				playable;
+	int				gender;
 } xq_model_t;
 typedef enum xq_body_part_e {
 	XQ_BODY_PART_NONE,
@@ -609,3 +613,4 @@ qboolean xq_seq(char *str1, char *str2);
 int hex2dec(char hex);
 char *dec2bin(int64_t dec);
 char *dec2bin32(int dec);
+int xq_class_race_combo(int class, int race);

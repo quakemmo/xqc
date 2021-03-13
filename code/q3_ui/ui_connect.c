@@ -191,14 +191,34 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	}
 // XXX xqx
+	trap_Cvar_Set("xq_charSelOn", "0");
 	if (!Q_strncmp(cstate.messageString, "1\n", 40)) {
+		trap_Cvar_Set("xq_charSelOn", "1");
 		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, "LOGIN FAILED - RERUN LAUNCHER", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	} else if (cstate.messageString[0] == '2') {
+		trap_Cvar_Set("xq_charSelOn", "1");
 		UI_XQCharselMenu(cstate.messageString);
-		//UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, "CHAR SELECTOR", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	} else {
 		if (Q_strncmp(cstate.messageString, "0\n", 40) && (Q_strncmp(cstate.messageString, "", 40))) {
-			trap_Cmd_ExecuteText( EXEC_NOW, va("connect %s\n", cstate.messageString));
+			if (cstate.messageString[0] == '!') {
+				trap_Cvar_Set("xq_charcreation_data", "");
+				char *hostname = strchr(cstate.messageString, '|');
+				if (hostname) {
+					hostname++;
+
+					char newcharname[XQ_MAX_CHAR_NAME+1] = {0};
+					int newcharname_len = strchr(cstate.messageString+1, '|') - (cstate.messageString+1);
+					newcharname_len++;
+					if (newcharname_len > 0) {
+						Q_strncpyz(newcharname, cstate.messageString+1, newcharname_len);
+						trap_Cvar_Set("cl_charname", newcharname);
+						trap_Cvar_Set("xq_charcreation_data", "");
+					}
+					trap_Cmd_ExecuteText(EXEC_NOW, va("connect %s\n", hostname));
+				}
+			} else {
+				trap_Cmd_ExecuteText(EXEC_NOW, va("connect %s\n", cstate.messageString));
+			}
 		}
 	}
 // XXX -xqx

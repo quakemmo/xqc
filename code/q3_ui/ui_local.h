@@ -106,7 +106,7 @@ extern vmCvar_t	ui_ioq3;
 #define	MAX_EDIT_LINE			256
 
 #define MAX_MENUDEPTH			8
-#define MAX_MENUITEMS			64
+#define MAX_MENUITEMS			640 // XXX xqx 64 > 640
 
 #define MTYPE_NULL				0
 #define MTYPE_SLIDER			1	
@@ -525,10 +525,16 @@ typedef struct {
 	int				barrelTime;
 
 	int				realWeapon;
+// XXX xqx
+	char			modelname[100];
+	int				facenum;
+	int				race;
+	int				face;
+// XXX -xqx
 } playerInfo_t;
 
 void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int time );
-void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model );
+void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, int facenum ); // XXX xqx added facenum
 void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
 qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName );
 
@@ -812,7 +818,11 @@ void UI_RankStatusMenu( void );
 //
 void UI_XQCharsel_Cache(void);
 void UI_XQCharselMenu(char *);
-extern void UI_XQCharselnMenu_f(char *);
+void UI_XQCharselnMenu_f(char *);
+// ui_xq_charcreator.c
+void UI_XQCharCreatorMenu(char *status);
+
+extern xq_model_t xq_playable_models[XQ_RACES][2];
 // XXX -xqx
 
 #endif

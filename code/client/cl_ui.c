@@ -39,6 +39,14 @@ static void GetClientState( uiClientState_t *state ) {
 	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
+	// XXX xqx
+	// Ugly kludge: only report character creation failure to the UI once
+	if (strlen(clc.serverMessage) > 2) {
+		if (clc.serverMessage[0] == '2' && clc.serverMessage[1] == '1') {
+			clc.serverMessage[1] = '0';
+		}
+	}
+	// XXX xqx
 	state->clientNum = cl.snap.ps.clientNum;
 }
 

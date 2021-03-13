@@ -721,8 +721,8 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	refEntity_t		flash = {0};
 	vec3_t			origin;
 	int				renderfx;
-	vec3_t			mins = {-16, -16, -24};
-	vec3_t			maxs = {16, 16, 32};
+	vec3_t			mins = {0, 0, 0}; // XXX xqx adjusted for XQ player model bbox
+	vec3_t			maxs = {32, 32, 56}; // XXX  xqx also here
 	float			len;
 	float			xx;
 
@@ -788,14 +788,17 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = pi->legsSkin;
+//	legs.customSkin = pi->legsSkin; // XXX xqx commented out
 
 	VectorCopy( origin, legs.origin );
 
 	VectorCopy( origin, legs.lightingOrigin );
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);
-
+// XXX xqx
+	legs.customShader = trap_R_RegisterShaderNoMip(va("app/%s/legs/0", pi->modelname));
+	legs.feetShader = trap_R_RegisterShaderNoMip(va("app/%s/feet/0", pi->modelname));
+// XXX -xqx
 	trap_R_AddRefEntityToScene( &legs );
 
 	if (!legs.hModel) {
@@ -810,7 +813,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		return;
 	}
 
-	torso.customSkin = pi->torsoSkin;
+	//torso.customSkin = pi->torsoSkin; // XXX xqx commented out
 
 	VectorCopy( origin, torso.lightingOrigin );
 
@@ -818,6 +821,13 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	torso.renderfx = renderfx;
 
+// XXX xqx
+	torso.customShader = trap_R_RegisterShaderNoMip(va("app/%s/torso/0", pi->modelname));
+	torso.armsShader = trap_R_RegisterShaderNoMip(va("app/%s/arms/0", pi->modelname));
+	torso.handsShader = trap_R_RegisterShaderNoMip(va("app/%s/hands/0", pi->modelname));
+	torso.leftwristShader = trap_R_RegisterShaderNoMip(va("app/%s/leftwrist/0", pi->modelname));
+	torso.rightwristShader = trap_R_RegisterShaderNoMip(va("app/%s/rightwrist/0", pi->modelname));
+// XXX -xqx
 	trap_R_AddRefEntityToScene( &torso );
 
 	//
@@ -827,7 +837,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	if (!head.hModel) {
 		return;
 	}
-	head.customSkin = pi->headSkin;
+	//head.customSkin = pi->headSkin; // XXX xqx commented out
 
 	VectorCopy( origin, head.lightingOrigin );
 
@@ -835,6 +845,9 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	head.renderfx = renderfx;
 
+// XXX xqx
+	head.customShader = trap_R_RegisterShaderNoMip(va("app/%s/head/%i", pi->modelname, pi->facenum));
+// XXX -xqx
 	trap_R_AddRefEntityToScene( &head );
 
 	//
@@ -1108,7 +1121,7 @@ static qboolean UI_ParseAnimationFile( const char *filename, playerInfo_t *pi ) 
 UI_RegisterClientModelname
 ==========================
 */
-qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName ) {
+qboolean UI_RegisterClientModelname_orig( playerInfo_t *pi, const char *modelSkinName ) {
 	char		modelName[MAX_QPATH];
 	char		skinName[MAX_QPATH];
 	char		filename[MAX_QPATH];
@@ -1174,14 +1187,60 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 	return qtrue;
 }
 
+qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *path ) {
+	// This has been adapter for XQ. Original function preserved above in
+	// UI_RegisterClientModelname_orig()
+	char		filename[MAX_QPATH];
+
+	pi->torsoModel = 0;
+	pi->headModel = 0;
+
+	if (!path[0]) {
+		return qfalse;
+	}
+
+
+	Com_sprintf(filename, sizeof(filename), "models/app/%s/lower.md3", path);
+	pi->legsModel = trap_R_RegisterModel(filename);
+	if (!pi->legsModel) {
+		Com_Printf("Failed to load model file %s\n", filename);
+		return qfalse;
+	}
+
+	Com_sprintf(filename, sizeof(filename), "models/app/%s/upper.md3", path);
+	pi->torsoModel = trap_R_RegisterModel(filename);
+	if (!pi->torsoModel) {
+		Com_Printf("Failed to load model file %s\n", filename);
+		return qfalse;
+	}
+
+	Com_sprintf(filename, sizeof(filename), "models/app/%s/head.md3", path);
+	pi->headModel = trap_R_RegisterModel(filename);
+	if (!pi->headModel) {
+		Com_Printf("Failed to load model file %s\n", filename);
+		return qfalse;
+	}
+
+	// load the animations
+	Com_sprintf(filename, sizeof(filename ), "models/app/%s/animation.cfg", path);
+	if ( !UI_ParseAnimationFile( filename, pi ) ) {
+		Com_Printf( "Failed to load animation file %s\n", filename );
+		// test models with no anims should still be displayed
+		// return qfalse;
+	}
+
+	return qtrue;
+}
 
 /*
 ===============
 UI_PlayerInfo_SetModel
 ===============
 */
-void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model ) {
+void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, int facenum) { // XXX xqx added facenum
 	memset( pi, 0, sizeof(*pi) );
+	Q_strncpyz(pi->modelname, model, sizeof(pi->modelname)); // XXX xqx
+	pi->facenum = facenum; // XXX xqx
 	UI_RegisterClientModelname( pi, model );
 	pi->weapon = WP_MACHINEGUN;
 	pi->currentWeapon = pi->weapon;

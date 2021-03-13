@@ -100,6 +100,8 @@ cvar_t	*cl_devauthscheme;
 cvar_t	*cl_patcherpath;
 cvar_t	*cl_acctname;
 cvar_t	*xq_debugInfo;
+cvar_t	*xq_charcreation_data;
+cvar_t	*xq_charSelOn; // If we're on the char selection or char creation screen, this is "1"
 // XXX -xqx
 cvar_t	*cl_sensitivity;
 
@@ -2375,6 +2377,13 @@ void CL_CheckForResend( void ) {
 	if ( cls.realtime - clc.connectTime < RETRANSMIT_TIMEOUT ) {
 		return;
 	}
+	// XXX xqx
+	// If we're on the char selector or char creation UI screen,
+	// we don't actually want to retry connecting automatically.
+	if (xq_charSelOn->integer && clc.connectTime > 0) {
+		return;
+	}
+	// XXX xqx
 
 	clc.connectTime = cls.realtime;	// for retransmit requests
 	clc.connectPacketCount++;
@@ -3607,6 +3616,8 @@ void CL_Init( void ) {
 	cl_xq_chat_type_x = Cvar_Get( "cl_xq_chat_type_x", "0", CVAR_TEMP );
 	cl_xq_chat_type_y = Cvar_Get( "cl_xq_chat_type_y", "0", CVAR_TEMP );
 	xq_debugInfo = Cvar_Get( "xq_debugInfo", "0", CVAR_TEMP);
+	xq_charcreation_data = Cvar_Get( "xq_charcreation_data", "", CVAR_USERINFO);
+	xq_charSelOn = Cvar_Get( "xq_charSelOn", "0", CVAR_TEMP);
 	xq_pers_init();
 // XXX -xqx
 

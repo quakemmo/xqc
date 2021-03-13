@@ -93,18 +93,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define DEFAULT_BLUETEAM_NAME		"Pagans"
 
 typedef enum {
-	FOOTSTEP_NORMAL,
-	FOOTSTEP_BOOT,
-	FOOTSTEP_FLESH,
-	FOOTSTEP_MECH,
-	FOOTSTEP_ENERGY,
-	FOOTSTEP_METAL,
-	FOOTSTEP_SPLASH,
-
-	FOOTSTEP_TOTAL
-} footstep_t;
-
-typedef enum {
 	IMPACTSOUND_DEFAULT,
 	IMPACTSOUND_METAL,
 	IMPACTSOUND_FLESH
@@ -325,7 +313,6 @@ typedef struct {
 // client model and other color coded effects
 // this is regenerated each time a client's configstring changes,
 // usually as a result of a userinfo (name, model, etc) change
-#define	MAX_CUSTOM_SOUNDS	32
 
 typedef struct {
 	qboolean		infoValid;
@@ -1781,7 +1768,6 @@ qboolean    CG_FileExists(const char *filename); // function used to be static i
 void CG_AddWeaponWithPowerups(refEntity_t *gun, int flags, entityState_t *es); // removed static decl in cg_weapon.c as we need to call it for held item rendering from cg_xq.c, added flags, added es
 void trap_XQ_Mouselook(int on);
 void trap_XQ_ClearKeys(void);
-
 // XXX -xqx
 
 

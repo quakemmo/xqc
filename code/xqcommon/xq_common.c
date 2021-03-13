@@ -4,7 +4,7 @@
 #include "../game/bg_public.h"
 
 static void readName(int32_t *ptr, int ints, char *buf) {
-	// buf must be of size (ints*4 + 1) for null
+	// buf must be of size (ints*4 + 1) for terminating zero
 	for (int i = 0;  i < ints;  i++) {
 		buf[i*4+0] = *(ptr+i) >> 24;
 		buf[i*4+1] = *(ptr+i) << 8 >> 24;
@@ -47,6 +47,7 @@ uint64_t xq_msec() {
 }
 char * xq_since_start(uint64_t start_time) {
 	static char ret[30];
+	memset(ret, 0, sizeof(ret));
 
 	uint64_t diff = xq_msec() - start_time;
 	uint64_t sec = diff / 1000;
@@ -56,37 +57,34 @@ char * xq_since_start(uint64_t start_time) {
 
 	return (char *)ret;
 }
-
 char *xq_skills_literal(int skill, int type, int leftpad) {
 	static char ret[100];
 	char tmp[100] = {0};
 	memset(ret, 0, sizeof(ret));
-
-
 	strcpy(tmp, "UNKNOWN SKILL");
 
 	switch (skill) {
-		case XQ_SKILL_TAILORING:			strcpy(tmp, type ? "skill_tailoring" : "Tailoring");			break;
-		case XQ_SKILL_COOKING:				strcpy(tmp, type ? "skill_cooking" : "Cooking");				break;
-		case XQ_SKILL_BLACKSMITHING:		strcpy(tmp, type ? "skill_blacksmithing" : "Blacksmithing");	break;
-		case XQ_SKILL_SWIMMING:				strcpy(tmp, type ? "skill_swimming" : "Swimming");				break;
-		case XQ_SKILL_CHANNELLING:			strcpy(tmp, type ? "skill_channelling" : "Channelling");		break;
-		case XQ_SKILL_MELEE:				strcpy(tmp, type ? "skill_melee" : "Melee");					break;
-		case XQ_SKILL_FIRE:					strcpy(tmp, type ? "skill_fire" : "Fire");						break;
-		case XQ_SKILL_COLD:					strcpy(tmp, type ? "skill_cold" : "Cold");						break;
-		case XQ_SKILL_POISON:				strcpy(tmp, type ? "skill_poison" : "Poison");					break;
-		case XQ_SKILL_DISEASE:				strcpy(tmp, type ? "skill_disease" : "Disease");				break;
-		case XQ_SKILL_PSY:					strcpy(tmp, type ? "skill_psy" : "Psy");						break;
+		case XQ_SKILL_TAILORING:		strcpy(tmp, type ? "skill_tailoring"		:	"Tailoring");		break;
+		case XQ_SKILL_COOKING:			strcpy(tmp, type ? "skill_cooking"			:	"Cooking");			break;
+		case XQ_SKILL_BLACKSMITHING:	strcpy(tmp, type ? "skill_blacksmithing"	:	"Blacksmithing");	break;
+		case XQ_SKILL_SWIMMING:			strcpy(tmp, type ? "skill_swimming"			: 	"Swimming");		break;
+		case XQ_SKILL_CHANNELLING:		strcpy(tmp, type ? "skill_channelling"		:	"Channelling");		break;
+		case XQ_SKILL_MELEE:			strcpy(tmp, type ? "skill_melee"			:	"Melee");			break;
+		case XQ_SKILL_FIRE:				strcpy(tmp, type ? "skill_fire"				:	"Fire");			break;
+		case XQ_SKILL_COLD:				strcpy(tmp, type ? "skill_cold"				:	"Cold");			break;
+		case XQ_SKILL_POISON:			strcpy(tmp, type ? "skill_poison"			:	"Poison");			break;
+		case XQ_SKILL_DISEASE:			strcpy(tmp, type ? "skill_disease"			:	"Disease");			break;
+		case XQ_SKILL_PSY:				strcpy(tmp, type ? "skill_psy"				:	"Psy");				break;
 
-		case XQ_SKILL_H2H:					strcpy(tmp, type ? "skill_h2h": "Hand-to-hand");				break;
-		case XQ_SKILL_W2:					strcpy(tmp, type ? "skill_w2" : "Weapon type 2");				break;
-		case XQ_SKILL_W3:					strcpy(tmp, type ? "skill_w3" : "Weapon type 3");				break;
-		case XQ_SKILL_W4:					strcpy(tmp, type ? "skill_w4" : "Weapon type 4");				break;
-		case XQ_SKILL_W5:					strcpy(tmp, type ? "skill_w5" : "Weapon type 5");				break;
-		case XQ_SKILL_W6:					strcpy(tmp, type ? "skill_w6" : "Weapon type 6");				break;
-		case XQ_SKILL_W7:					strcpy(tmp, type ? "skill_w7" : "Weapon type 7");				break;
-		case XQ_SKILL_W8:					strcpy(tmp, type ? "skill_w8" : "Weapon type 8");				break;
-		case XQ_SKILL_W9:					strcpy(tmp, type ? "skill_w9" : "Weapon type 9");				break;
+		case XQ_SKILL_H2H:				strcpy(tmp, type ? "skill_h2h"				:	"Hand-to-hand");	break;
+		case XQ_SKILL_W2:				strcpy(tmp, type ? "skill_w2" 				:	"Weapon type 2");	break;
+		case XQ_SKILL_W3:				strcpy(tmp, type ? "skill_w3" 				:	"Weapon type 3");	break;
+		case XQ_SKILL_W4:				strcpy(tmp, type ? "skill_w4" 				:	"Weapon type 4");	break;
+		case XQ_SKILL_W5:				strcpy(tmp, type ? "skill_w5" 				:	"Weapon type 5");	break;
+		case XQ_SKILL_W6:				strcpy(tmp, type ? "skill_w6" 				:	"Weapon type 6");	break;
+		case XQ_SKILL_W7:				strcpy(tmp, type ? "skill_w7" 				:	"Weapon type 7");	break;
+		case XQ_SKILL_W8:				strcpy(tmp, type ? "skill_w8" 				:	"Weapon type 8");	break;
+		case XQ_SKILL_W9:				strcpy(tmp, type ? "skill_w9" 				:	"Weapon type 9");	break;
 	}
 
 	int i = 0;
@@ -139,10 +137,8 @@ int xq_weapon_skill_to_weapon(int skill) {
 			return WP_GAUNTLET;
 	}
 }
-
 void xq_break() {
 }
-
 int xq_anim_to_q3(xq_anim_t xqanim, int torso, int idle_variety) {
 	switch (xqanim) {
 		case XQ_ANIM_IDLE:
@@ -179,24 +175,26 @@ qboolean xq_is_magic_user(int class) {
 }
 char *xq_class_lit(int c, int uppercase, int abbr) {
     static char ret[20];
+	memset(ret, 0, sizeof(ret));
 
     switch (c) {
-        case XQ_WARRIOR: strcpy(ret, abbr ? "War" : "Warrior"); break;
-        case XQ_CLERIC: strcpy(ret, abbr ? "Cle" : "Cleric"); break;
-        case XQ_ENCHANTER: strcpy(ret, abbr ? "Enc" : "Enchanter"); break;
-        case XQ_SHAMAN: strcpy(ret, abbr ? "Shm" : "Shaman"); break;
-        case XQ_PALADIN: strcpy(ret, abbr ? "Pal" : "Paladin"); break;
-        case XQ_SHADOWKNIGHT: strcpy(ret, abbr ? "Shd" : "Shadowknight"); break;
-        case XQ_MONK: strcpy(ret, abbr ? "Mnk" : "Monk"); break;
-        case XQ_RANGER: strcpy(ret, abbr ? "Rng" : "Ranger"); break;
-        case XQ_ROGUE: strcpy(ret, abbr ? "Rog" : "Rogue"); break;
-        case XQ_MAGICIAN: strcpy(ret, abbr ? "Mag" : "Magician"); break;
-        case XQ_NECROMANCER: strcpy(ret, abbr ? "Nec" : "Necromancer"); break;
-        case XQ_WIZARD: strcpy(ret, abbr ? "Wiz" : "Wizard"); break;
-        case XQ_BARD: strcpy(ret, abbr ? "Brd" : "Bard"); break;
-        case XQ_DRUID: strcpy(ret, abbr ? "Dru" : "Druid"); break;
-        case XQ_SCOUT: strcpy(ret, abbr ? "Sct" : "Scout"); break;
-        default: strcpy(ret, abbr ? "Bng" : "Being"); break;
+        case XQ_WARRIOR:		strcpy(ret, abbr ? "War" : "Warrior");		break;
+        case XQ_CLERIC:			strcpy(ret, abbr ? "Cle" : "Cleric");		break;
+        case XQ_ENCHANTER:		strcpy(ret, abbr ? "Enc" : "Enchanter");	break;
+        case XQ_SHAMAN:			strcpy(ret, abbr ? "Shm" : "Shaman");		break;
+        case XQ_PALADIN:		strcpy(ret, abbr ? "Pal" : "Paladin");		break;
+        case XQ_SHADOWKNIGHT:	strcpy(ret, abbr ? "Shd" : "Shadowknight");	break;
+        case XQ_MONK:			strcpy(ret, abbr ? "Mnk" : "Monk");			break;
+        case XQ_RANGER:			strcpy(ret, abbr ? "Rng" : "Ranger");		break;
+        case XQ_ROGUE:			strcpy(ret, abbr ? "Rog" : "Rogue");		break;
+        case XQ_MAGICIAN:		strcpy(ret, abbr ? "Mag" : "Magician");		break;
+        case XQ_NECROMANCER:	strcpy(ret, abbr ? "Nec" : "Necromancer");	break;
+        case XQ_WIZARD:			strcpy(ret, abbr ? "Wiz" : "Wizard");		break;
+        case XQ_BARD:			strcpy(ret, abbr ? "Brd" : "Bard");			break;
+        case XQ_DRUID:			strcpy(ret, abbr ? "Dru" : "Druid");		break;
+        case XQ_SCOUT:			strcpy(ret, abbr ? "Sct" : "Scout");		break;
+
+        default:				strcpy(ret, abbr ? "Bng" : "Being");		break;
     }
 	if (uppercase) {
 		xq_strtoupper(ret);
@@ -205,6 +203,7 @@ char *xq_class_lit(int c, int uppercase, int abbr) {
 }
 char *xq_race_lit(int c, int uppercase, int abbr) {
     static char ret[20];
+	memset(ret, 0, sizeof(ret));
 
     switch (c) {
         case XQ_HUMAN: strcpy(ret, abbr ? "Hum" : "Human"); break;
@@ -362,7 +361,6 @@ int hex2dec(char hex) {
     return 0;
 }
 char *dec2bin(int64_t dec) {
-
 	static char ret[65+7];
 	memset(ret, 32, sizeof(ret));
 	ret[71] = 0;
@@ -382,7 +380,6 @@ char *dec2bin(int64_t dec) {
 	return ret;
 }
 char *dec2bin32(int dec) {
-
 	static char ret[33+3];
 	memset(ret, 32, sizeof(ret));
 	ret[35] = 0;
@@ -400,4 +397,110 @@ char *dec2bin32(int dec) {
 	}
 
 	return ret;
+}
+int xq_class_race_combo(int class, int race) {
+	switch (class) {
+		case XQ_BARD:
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_WOODELF)		return 1;
+			break;
+		case XQ_CLERIC:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_DWARF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HALFLING)	return 1;
+			if (race == XQ_HIGHELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_DRUID:
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HALFLING)	return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_WOODELF)		return 1;
+			break;
+		case XQ_ENCHANTER:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HIGHELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_MAGICIAN:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HIGHELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_MONK:
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_NECROMANCER:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_PALADIN:
+			if (race == XQ_DWARF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HIGHELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_RANGER:
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_WOODELF)		return 1;
+			break;
+		case XQ_ROGUE:
+			if (race == XQ_BARBARIAN)	return 1;
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_DWARF)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HALFLING)	return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_WOODELF)		return 1;
+			break;
+		case XQ_SHADOWKNIGHT:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_OGRE)		return 1;
+			if (race == XQ_TROLL)		return 1;
+			break;
+		case XQ_SHAMAN:
+			if (race == XQ_BARBARIAN)	return 1;
+			if (race == XQ_OGRE)		return 1;
+			if (race == XQ_TROLL)		return 1;
+			break;
+		case XQ_WARRIOR:
+			if (race == XQ_BARBARIAN)	return 1;
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_DWARF)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HALFELF)		return 1;
+			if (race == XQ_HALFLING)	return 1;
+			if (race == XQ_HUMAN)		return 1;
+			if (race == XQ_OGRE)		return 1;
+			if (race == XQ_TROLL)		return 1;
+			if (race == XQ_WOODELF)		return 1;
+			break;
+		case XQ_WIZARD:
+			if (race == XQ_DARKELF)		return 1;
+			if (race == XQ_ERUDITE)		return 1;
+			if (race == XQ_GNOME)		return 1;
+			if (race == XQ_HIGHELF)		return 1;
+			if (race == XQ_HUMAN)		return 1;
+			break;
+		case XQ_SCOUT:
+			if (race == XQ_HUMAN)		return 1;
+			break;
+	}
+
+	return 0;
+
 }

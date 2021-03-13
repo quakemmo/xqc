@@ -2665,6 +2665,7 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_confirm.o \
   $(B)/$(BASEGAME)/ui/ui_connect.o \
   $(B)/$(BASEGAME)/ui/ui_xq_controls.o \
+  $(B)/$(BASEGAME)/ui/ui_xq_charcreator.o \
   $(B)/$(BASEGAME)/ui/ui_credits.o \
   $(B)/$(BASEGAME)/ui/ui_demo2.o \
   $(B)/$(BASEGAME)/ui/ui_xq_display.o \

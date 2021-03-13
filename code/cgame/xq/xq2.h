@@ -1,26 +1,4 @@
-
-typedef struct xq_animodel_s {
-    #define         xq_cgame_animodel_t_MAGIC          0xb4b9efd3
-
-	int			magics;
-	int			model_index;
-    int         registered;
-    qhandle_t   handle_head;
-    qhandle_t   handle_torso;
-    qhandle_t   handle_legs;
-    animation_t animations[MAX_TOTALANIMATIONS];
-    sfxHandle_t	sounds[MAX_CUSTOM_SOUNDS];
-    footstep_t  footsteps;
-    qboolean    fixedlegs;
-    qboolean    fixedtorso;
-    gender_t    gender;
-	int			magice;
-} xq_animodel_t;
-
-
 extern xq_animodel_t *xq_animodels;
-
-
 
 xq_shader_t *xq_animodel_ModelShader(int model_index, xq_body_part_t body_part, int texture_num, int tint);
 xq_animodel_t *xq_animodel(int model_index);
