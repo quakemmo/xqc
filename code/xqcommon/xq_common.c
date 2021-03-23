@@ -502,5 +502,4 @@ int xq_class_race_combo(int class, int race) {
 	}
 
 	return 0;
-
 }

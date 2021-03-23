@@ -53,7 +53,7 @@ void xq_ping(void) {
 		return;
 	}
 
-	char name[XQ_MAX_NAME+1];
+	char name[XQ_MAX_CHAR_NAME+1];
 	memset(name, 0, sizeof(name));
 	Q_strncpyz(name, xqst->ui_charname, sizeof(name));
 	name[0] = tolower(name[0]);
