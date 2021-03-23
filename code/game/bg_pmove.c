@@ -379,7 +379,7 @@ static qboolean PM_CheckJump( void ) {
 	
 	pm->ps->xq_endurance -= XQ_ENDURANCE_PER_JUMP;
 	if (pm->ps->xq_endurance < 0) {
-		pm->ps->xq_endurance = 1;
+		pm->ps->xq_endurance = 0;
 	}
 // XXX -xqx
 
