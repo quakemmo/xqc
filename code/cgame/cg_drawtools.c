@@ -175,6 +175,7 @@ int xq_DrawStringExt(qw_window_t *win, int x, int y, const char *string, const f
 	return cr_num;
 }
 void xq_DrawChar(int x, int y, int width, int height, int ch) {
+	ch = xq_netchars_unescape(ch);
 	int		row, col;
 	float	frow, fcol;
 	float	size;
@@ -281,6 +282,7 @@ Coordinates and size in 640*480 virtual screen size
 ===============
 */
 void CG_DrawChar( int x, int y, int width, int height, int ch ) {
+	ch = xq_netchars_unescape(ch); // XXX xqx
 	int row, col;
 	float frow, fcol;
 	float size;
@@ -881,6 +883,7 @@ static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t co
 	while ( *s )
 	{
 		ch = *s & 127;
+		ch = xq_netchars_unescape(ch); // XXX xqx
 		if ( ch == ' ' ) {
 			aw = (float)PROP_SPACE_WIDTH * cgs.screenXScale * sizeScale;
 		} else if ( propMap[ch][2] != -1 ) {

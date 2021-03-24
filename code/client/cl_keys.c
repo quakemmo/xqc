@@ -641,6 +641,7 @@ void Field_CharEvent( field_t *edit, int ch ) {
 	if ( ch < 32 ) {
 		return;
 	}
+	ch = xq_netchars_escape(ch); // XXX xqx
 
 	if ( key_overstrikeMode ) {	
 		// - 2 to leave room for the leading slash and trailing \0
@@ -850,21 +851,22 @@ void Message_Key( int key ) {
 			else if (chat_team)
 
 				Com_sprintf( buffer, sizeof( buffer ), "say_team \"%s\"\n", chatField.buffer );
-			else
-				Com_sprintf( buffer, sizeof( buffer ), "say \"%s\"\n", chatField.buffer );
-
+			else {
 // XXX xqx  
-			char *c = buffer;
-			while (*c) {
-				if (*c == '%') {
-					*c = 30;
+				char tmp[MAX_STRING_CHARS] = {0};
+				Q_strncpyz(tmp, chatField.buffer, MAX_STRING_CHARS);
+				char *c = tmp;
+				while (*c) {
+					*c = xq_netchars_escape(*c);
+					c++;
 				}
-				c++;
+				Com_sprintf(buffer, sizeof(buffer), "say \"%s\"\n", tmp);
 			}
+
 			if (VM_Call(cgvm, CG_XQ_LOCALCMD, S64_1((uint64_t)chatField.buffer), S64_2((uint64_t)chatField.buffer)) == qfalse) {
 				CL_AddReliableCommand(buffer, qfalse);
 			}
-// XXX -xqx 
+// XXX -xqx
 
 		}
 		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );

@@ -104,7 +104,7 @@ void xq_SCR_DrawTinyStringExt( int x, int y, const char *string, float *setColor
 	re.SetColor( NULL );
 }
 void xq_SCR_DrawChar( int x, int y, int width, int height, int ch ) {
-
+	ch = xq_netchars_unescape(ch);
     int row, col;
     float frow, fcol;
     float size;
@@ -135,13 +135,10 @@ void xq_SCR_DrawChar( int x, int y, int width, int height, int ch ) {
                        cls.charSetShader );
 }
 void xq_SCR_DrawSmallChar( int x, int y, int ch ) {
+	ch = xq_netchars_unescape(ch);
 	int row, col;
 	float frow, fcol;
 	float size;
-
-	if (ch == 30) {
-		ch = '%';
-	}
 
 	ch &= 255;
 
@@ -166,13 +163,10 @@ void xq_SCR_DrawSmallChar( int x, int y, int ch ) {
 					   cls.charSetShader );
 }
 void xq_SCR_DrawTinyChar( int x, int y, int ch ) {
+	ch = xq_netchars_unescape(ch);
 	int row, col;
 	float frow, fcol;
 	float size;
-
-	if (ch == 30) {
-		ch = '%';
-	}
 
 	ch &= 255;
 
@@ -367,6 +361,7 @@ static void SCR_DrawChar( int x, int y, float size, int ch ) {
 ** small chars are drawn at native screen resolution
 */
 void SCR_DrawSmallChar( int x, int y, int ch ) {
+	ch = xq_netchars_unescape(ch); // XXX xqx
 	int row, col;
 	float frow, fcol;
 	float size;

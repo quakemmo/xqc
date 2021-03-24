@@ -614,3 +614,5 @@ int hex2dec(char hex);
 char *dec2bin(int64_t dec);
 char *dec2bin32(int dec);
 int xq_class_race_combo(int class, int race);
+char xq_netchars_escape(char in);
+char xq_netchars_unescape(char in);

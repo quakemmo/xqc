@@ -11,6 +11,7 @@ xq_pers_t xq_pers[XQ_PERS_NUM];
 
 void xq_write_to_logfile(char *msg, char *filename) {
 
+
 	static int newline = 1;
 
 	if (msg[0] == '\n') msg++;
@@ -41,6 +42,9 @@ void xq_write_to_logfile(char *msg, char *filename) {
 				newline = 0;
 			} else {
 				snprintf(buf, 999, "%s", msg);
+			}
+			for (int i = 0;  i < strlen(buf);  i++) {
+				buf[i] = xq_netchars_unescape(buf[i]);
 			}
 			fputs(buf, fd);
 			if (msg[strlen(msg)-1] == '\n') {
