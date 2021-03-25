@@ -46,7 +46,8 @@ static void HoverTooltip(void) {
 	// See how is our hovering state compared to the previous frame.
 	int hoverwin = qw_WindowFindXY(xqst->mousex, xqst->mousey, NULL);
 	if (hoverwin > -1) {
-		qw_obj_click_t *findobj = qw_ObjectFindXY(hoverwin, xqst->mousex, xqst->mousey, 0);
+		qw_obj_click_t *findobj =
+			qw_ObjectFindXY(hoverwin, xqst->mousex, xqst->mousey, 0, QW_OBJ_TOOLTIP);
 		hoverobj = findobj->objid;
 	}
 
@@ -89,7 +90,7 @@ static void HoverTooltip(void) {
 			if (spell) { // This can fail if we didn't get (yet) the spell info from the server.
 				tooltiptxt = spell->name;
 			}
-		} 
+		}
 
 		// We have a valid tooltip text - go ahead and display it
 		if (tooltiptxt && strlen(tooltiptxt)) {

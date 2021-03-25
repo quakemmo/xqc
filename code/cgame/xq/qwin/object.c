@@ -3,7 +3,7 @@
 // This is used by qsort
 qw_obj_attach_t *xqui_tmp_obj_att;
 
-qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough) {
+qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough, int skip_type) {
 	// Find the highest zindex object at mx/my
 	// optionally ignoring the clickthrough objects.
 
@@ -26,6 +26,9 @@ qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough) 
 			if (o->clickthrough == 1 && skip_clickthrough == 1) {
 				continue;
 			}
+			if (o->type == skip_type) {
+				continue;
+			}
 			actual_x = att->x;
 			actual_y = att->y;
 			if (actual_x < 0 || att->x_centered == 1) {
@@ -36,7 +39,7 @@ qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough) 
 			}
 			if (
 					(w->x + actual_x) <= mx &&
-					(w->x + actual_x + o->w) >= mx && 
+					(w->x + actual_x + o->w) >= mx &&
 					(w->y + actual_y) <= my &&
 					(w->y + actual_y + o->h) >= my
 				) {

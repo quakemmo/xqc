@@ -38,7 +38,7 @@
 #define 	QW_OBJ_BUTTON_ACTION_COMBINE			7
 #define 	QW_OBJ_BUTTON_ACTION_SPELLBOOK_SWITCH	8
 #define 	QW_OBJ_BUTTON_ACTION_SKILL_CAPUP		9
-#define 	QW_OBJ_BUTTON_ACTION_BOOK_SWITCH		15	
+#define 	QW_OBJ_BUTTON_ACTION_BOOK_SWITCH		15
 #define QW_OBJ_ITEMGFX								10
 #define QW_OBJ_TIMEBAR								11
 #define QW_OBJ_SPELL_GEM							12
@@ -418,7 +418,7 @@ int					qw_TopZI(void);
 
 
 // object.c
-qw_obj_click_t *	qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough);
+qw_obj_click_t *	qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough, int skip_type);
 int					qw_ObjZICompareFnc(const void *a, const void *b);
 void				qw_ObjDraw(qw_window_t *win, int attachnum);
 void				qw_ObjDetach(int win, int oid);
@@ -432,7 +432,7 @@ void				qw_TooltipCloseAll(void);
 int					qw_Hover(qw_obj_t *obj);
 
 // prompt.c
-void				qw_Prompt(char *text, int actionyes, int actionno, int64_t arg1, int64_t arg2, int64_t arg3);                     
+void				qw_Prompt(char *text, int actionyes, int actionno, int64_t arg1, int64_t arg2, int64_t arg3);
 
 
 

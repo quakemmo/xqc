@@ -25,7 +25,8 @@ static void ItemRightClick(xq_item_t *iinf, int slot) {
 
 	} else if (iinf->skillup_skill) {
 		qw_Prompt(
-			va("This will increase your %s skill. Proceed?",xq_skills_literal(iinf->skillup_skill, 0, 0)),
+			va("This will increase your %s skill. Proceed?",
+				xq_skills_literal(iinf->skillup_skill, 0, 0)),
 			QW_PROMPT_ACTION_SKILLUP, 0, slot, 0, 0);
 
 	} else if (iinf->food || iinf->water) {
@@ -205,7 +206,6 @@ void qw_Obj_InvSlot_Click(int win, int button, int obj, int init_x, int init_y, 
 				item = *(&iinf_tmp->container_slot_1 + o->container_slot - 1);
 			}
 			break;
-					
 	}
 
 

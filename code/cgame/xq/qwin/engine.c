@@ -13,10 +13,10 @@ static void MouseUp(int *mouseup_not_grabbed, int *dont_clear_mouse_spell) {
 
 		// Make sure mouse spell doesn't poof upon mouseup from the spell obj
 		if (o->type == QW_OBJ_SPELLBOOK_SLOT) {
-			*dont_clear_mouse_spell = 1; 
+			*dont_clear_mouse_spell = 1;
 		}
 	} else {
-		// RMB mouseup from temp 3D scene mouse view 
+		// RMB mouseup from temp 3D scene mouse view
 		*mouseup_not_grabbed = 1;
 	}
 
@@ -31,7 +31,7 @@ static void MouseUp(int *mouseup_not_grabbed, int *dont_clear_mouse_spell) {
 static void MouseDown(int *mouseup_not_grabbed, int *dont_clear_mouse_spell, int button, int shift, int ctrl, int alt, int clickwin) {
 	int mx = xqst->mousex, my = xqst->mousey;
 	qw_window_t *w = &qws->win[clickwin];
-	qw_obj_click_t *findobj = qw_ObjectFindXY(clickwin, mx, my, 1);
+	qw_obj_click_t *findobj = qw_ObjectFindXY(clickwin, mx, my, 1, 0);
 	int clickobj = findobj->objid;
 
 
@@ -189,7 +189,7 @@ void qw_MouseMove(void) {
 
 		// Let's see if we're hovering over an object that's sensible to hovering
 		// (ie: button for bg color change)
-		qw_obj_click_t *findobj = qw_ObjectFindXY(hoverwin, xqst->mousex, xqst->mousey, 0);
+		qw_obj_click_t *findobj = qw_ObjectFindXY(hoverwin, xqst->mousex, xqst->mousey, 0, 0);
 		if (findobj->objid > -1) {
 			int objnum = hwh->obj[findobj->objid].num;
 			qws->obj[objnum].hovered = 1;
@@ -225,7 +225,6 @@ void qw_Render(void) {
 	// Sorted them according to their zindex
 	qsort(sorted, cnt, sizeof(int), qw_WindowZICompareFnc);
 
-	
 	// Draw them all
 	for (i = 0;  i < cnt;  i++) {
 		if (qws->win[sorted[i]].wid[0]) {

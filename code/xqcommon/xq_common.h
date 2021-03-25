@@ -24,7 +24,7 @@
 #define XQ_ANIM_RUN_THRESHOLD_PLAYER		100 // slower speeds will make players look like they are walking
 #define XQ_ANIM_RUN_THRESHOLD_NPC			100 // slower speeds will make mobs look like they are walking
 
-#define XQ_ITEM_ERROR						-1000000000	
+#define XQ_ITEM_ERROR						-1000000000
 
 
 #define XQ_ITEM_SLOT_PRIMARY				(1)
@@ -239,6 +239,7 @@
 #define XQ_SPELL_MAX_MSG					100		// Max text size for spell messages (cast, fade, etc).
 
 #define XQ_SPELL_TARGET_NONE				0		// target none means spell is disabled
+													// (for clickies: means inherit target of spell)
 #define XQ_SPELL_TARGET_SELF				1
 #define XQ_SPELL_TARGET_SINGLE				2
 #define XQ_SPELL_TARGET_GROUP				3
