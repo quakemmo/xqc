@@ -1,76 +1,141 @@
-/*
-===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
-
-This file is part of Quake III Arena source code.
-
-Quake III Arena source code is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-Quake III Arena source code is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-===========================================================================
-*/
-//
-/*
-=======================================================================
-
-XQ LOGIN MENU
-
-=======================================================================
-*/
-
-
 #include "ui_local.h"
 
+typedef struct character_s {
+	char name[100];
+	char zone[100];
+	int class;
+	int race;
+	int face;
+	int gender;
+	int level;
+} character_t;
+character_t chars[8];
 
-#define ART_FRAME		"menu/art/cut_frame"
-#define ART_ACCEPT0		"menu/art/accept_0"
-#define ART_ACCEPT1		"menu/art/accept_1"	
-#define ART_BACK0		"menu/art/back_0"
-#define ART_BACK1		"menu/art/back_1"	
-
-#define ID_CDKEY		10
-#define ID_ACCEPT		11
-#define ID_BACK			12
-#define ID_CHAR			13
-
-
-typedef struct {
+typedef struct s_xqcharsel_s {
 	menuframework_s	menu;
 
 	menutext_s		banner;
-	menubitmap_s	frame;
 
+	menubitmap_s	arrow[8];
 	menutext_s		c[8];
 
-	menubitmap_s	accept;
-	menubitmap_s	back;
-} xqcharselMenuInfo_t;
+	menubitmap_s	enter;
+	menubitmap_s	delete;
 
-static xqcharselMenuInfo_t	xqcharselMenuInfo;
+	menutext_s		pname;
+	menutext_s		pzone;
+	menubitmap_s	player;
+} s_xqcharsel_t;
+static s_xqcharsel_t s_xqcharsel;
+
+static playerInfo_t pi = {0};
+static int selected_slot = -1;
 int go_straight_to_charcreation = 0;
+xq_model_t xq_playable_models[XQ_RACES][2];
 
 
-/*
-===============
-UI_xqcharselMenu_Event
-===============
-*/
-static void UI_XQCharselMenu_Event( void *ptr, int event ) {
-	if( event != QM_ACTIVATED ) {
+#define ART_ARROW		"menu/art/gs_arrows_r"
+#define ART_DELETE0		"menu/art/delete_0"
+#define ART_DELETE1		"menu/art/delete_1"
+#define ART_ENTER0		"menu/art/enter_0"
+#define ART_ENTER1		"menu/art/enter_1"
+
+#define ID_CHAR			13
+#define ID_DELETE		1000
+#define ID_ENTER		1001
+
+
+static void updateModel(void) {
+	if (selected_slot == -1) {
 		return;
 	}
 
-	switch( ((menucommon_s*)ptr)->id ) {
+	// Set the player model
+	vec3_t	viewangles;
+	vec3_t	moveangles;
+
+	viewangles[YAW]   = 180 - 0;
+	viewangles[PITCH] = 0;
+	viewangles[ROLL]  = 0;
+	VectorClear(moveangles);
+
+	pi.race = chars[selected_slot].race;
+	int gender = chars[selected_slot].gender;
+
+	char *path = xq_playable_models[pi.race][gender].path;
+	UI_PlayerInfo_SetModel(&pi, path, chars[selected_slot].face);
+	UI_PlayerInfo_SetInfo(&pi, LEGS_IDLE, TORSO_STAND, viewangles, moveangles, WP_NONE, qfalse);
+
+
+	// Set the player name, level, class and zone text
+	// appearing above the model
+	static char pname[200] = {0};
+	static char pzone[200] = {0};
+
+	if (selected_slot != -1) {
+		snprintf(pname, 200, "%s (%i %s)",
+			chars[selected_slot].name,
+			chars[selected_slot].level,
+			xq_class_lit(chars[selected_slot].class, 0, 0)
+		);
+		snprintf(pzone, 200, "%s", chars[selected_slot].zone);
+	} else {
+		pname[0] = 0;
+		pzone[0] = 0;
+	}
+	s_xqcharsel.pname.string = pname;
+	s_xqcharsel.pzone.string = pzone;
+}
+static void DrawPlayer(void *self) {
+	if (selected_slot == -1) {
+		return;
+	}
+	menubitmap_s *b = (menubitmap_s *)self;
+
+	UI_DrawPlayer(b->generic.x, b->generic.y, b->width, b->height, &pi, uis.realtime/2);
+}
+static void deleteChar(qboolean result) {
+	if (!result) {
+		// Said "No" to delete confirmation prompt
+		return;
+	}
+	if (selected_slot < 0) {
+		return;
+	}
+    char *charname = (char *)s_xqcharsel.c[selected_slot].generic.name;
+
+	trap_Cvar_Set("cl_charname", charname);
+	trap_Cvar_Set("xq_charDelete", "1");
+	trap_Cvar_Set("xq_charSelOn", "0");
+	trap_Cmd_ExecuteText(EXEC_APPEND, "reconnect\n");
+}
+static void showArrow(void) {
+	// Show the arrow next to the selected char
+	for (int i = 0;  i < 8;  i++) {
+		if (selected_slot == i) {
+			s_xqcharsel.arrow[i].width = 25;
+		} else {
+			s_xqcharsel.arrow[i].width = 0;
+		}
+	}
+
+	// Only show the delete/enter world buttons if we have a char selected
+	if (selected_slot == -1) {
+		s_xqcharsel.enter.width = 0;
+		s_xqcharsel.delete.width = 0;
+	} else {
+		s_xqcharsel.enter.width = 128;
+		s_xqcharsel.delete.width = 128;
+	}
+}
+static void menuEvent(void *ptr, int event) {
+	if (event != QM_ACTIVATED) {
+		return;
+	}
+
+	int id = ((menucommon_s*)ptr)->id;
+	char *charname;
+	switch (id) {
 		case ID_CHAR:
 		case ID_CHAR+1:
 		case ID_CHAR+2:
@@ -80,49 +145,31 @@ static void UI_XQCharselMenu_Event( void *ptr, int event ) {
 		case ID_CHAR+6:
 		case ID_CHAR+7:
 		case ID_CHAR+8:;
-			char *charname = (char *)((menucommon_s*)ptr)->name;
+			charname = (char *)((menucommon_s*)ptr)->name;
 			if (xq_seq(charname, "Empty slot")) {
+				selected_slot = -1;
 				UI_XQCharCreatorMenu("");
 			} else {
-				trap_Cvar_Set( "cl_charname", charname);
-				trap_Cvar_Set("xq_charSelOn", "0");
-				trap_Cmd_ExecuteText( EXEC_APPEND, "reconnect\n" );
+				selected_slot = id - ID_CHAR;
 			}
+			updateModel();
+			showArrow();
 			break;
 
-		case ID_ACCEPT:
-			UI_PopMenu();
+		case ID_ENTER:;
+			charname = (char *)s_xqcharsel.c[selected_slot].generic.name;
+			trap_Cvar_Set("cl_charname", charname);
+			trap_Cvar_Set("xq_charDelete", "0");
+			trap_Cvar_Set("xq_charSelOn", "0");
+			trap_Cmd_ExecuteText(EXEC_APPEND, "reconnect\n");
 			break;
 
-		case ID_BACK:
-			UI_PopMenu();
+		case ID_DELETE:
+			UI_ConfirmMenu("Delete character?", 0, deleteChar);
 			break;
 	}
 }
-
-typedef struct {
-	char name[100];
-	char zone[100];
-	char class[100];
-	int level;
-	char description[1001];
-} character_t;
-static void describe(character_t *c) {
-	snprintf(c->description, 1000,
-		"%s - %s(%i) - %s",
-		c->name, c->class, c->level, c->zone
-	);
-	c->description[0] = toupper(c->description[0]);
-}
-xq_model_t xq_playable_models[XQ_RACES][2];
-
-
-/*
-===============
-UI_XQCharselMenu_Init
-===============
-*/
-static void UI_XQCharselMenu_Init( char *ss ) {
+static void menuInit(char *ss) {
 	trap_Cvar_Set("cl_charname", "");
 	char *s = ss+2;
 	char toons[10000] = {0};
@@ -140,97 +187,137 @@ static void UI_XQCharselMenu_Init( char *ss ) {
 
 	int num = 0;
 
-	character_t chars[8] = {0};
+	memset(chars, 0, sizeof(chars));
 
-	memset( &xqcharselMenuInfo, 0, sizeof(xqcharselMenuInfo) );
-	xqcharselMenuInfo.menu.wrapAround = qtrue;
-	xqcharselMenuInfo.menu.fullscreen = qtrue;
+	memset(&s_xqcharsel, 0, sizeof(s_xqcharsel));
+	s_xqcharsel.menu.wrapAround = qtrue;
+	s_xqcharsel.menu.fullscreen = qtrue;
 
-	xqcharselMenuInfo.banner.generic.type				= MTYPE_BTEXT;
-	xqcharselMenuInfo.banner.generic.x					= 320;
-	xqcharselMenuInfo.banner.generic.y					= 10;
-	xqcharselMenuInfo.banner.string						= "CHARACTER SELECTION";
-	xqcharselMenuInfo.banner.color						= color_white;
-	xqcharselMenuInfo.banner.style						= UI_CENTER;
+	s_xqcharsel.banner.generic.type	= MTYPE_TEXT;
+	s_xqcharsel.banner.generic.x	= 320;
+	s_xqcharsel.banner.generic.y	= 6;
+	s_xqcharsel.banner.string		= "CHARACTER SELECTION";
+	s_xqcharsel.banner.color		= color_white;
+	s_xqcharsel.banner.style		= UI_CENTER;
 
-	xqcharselMenuInfo.frame.generic.type				= MTYPE_BITMAP;
-	xqcharselMenuInfo.frame.generic.name				= ART_FRAME;
-	xqcharselMenuInfo.frame.generic.flags				= QMF_INACTIVE;
-	xqcharselMenuInfo.frame.generic.x					= 142;
-	xqcharselMenuInfo.frame.generic.y					= 118;
-	xqcharselMenuInfo.frame.width  						= 359;
-	xqcharselMenuInfo.frame.height  					= 256;
+	int charx = 20;
+	int chary = 50;
+
+	int modelx = 380;
+	int modely = -30;
 
 	char *tok1 = strtok(toons, "|");
 	while (tok1 != NULL) {
-		int ret = sscanf(tok1, "%s %s %i %s",
-			chars[num].name, chars[num].class, &chars[num].level, chars[num].zone);
-		if (strlen(chars[num].name) > 0 && ret == 4) {
+		int ret = sscanf(tok1, "%s %i %i %s %i %i %i",
+			chars[num].name,
+			&chars[num].class,
+			&chars[num].level,
+			chars[num].zone,
+			&chars[num].race,
+			&chars[num].face,
+			&chars[num].gender
+		);
 
-			describe(&chars[num]);
+		if (strlen(chars[num].name) > 0 && ret == 7) {
 
-			xqcharselMenuInfo.c[num].generic.type		= MTYPE_PTEXT;
-			xqcharselMenuInfo.c[num].generic.name		= chars[num].name;
-			xqcharselMenuInfo.c[num].generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-			xqcharselMenuInfo.c[num].generic.x			= 320;
-			xqcharselMenuInfo.c[num].generic.y			= 150 + num * 30;
-			xqcharselMenuInfo.c[num].generic.id			= ID_CHAR + num;
-			xqcharselMenuInfo.c[num].generic.callback	= UI_XQCharselMenu_Event;
-			xqcharselMenuInfo.c[num].string				= chars[num].description;
-			xqcharselMenuInfo.c[num].color				= color_yellow;
-			xqcharselMenuInfo.c[num].style				= UI_CENTER;
-
+			s_xqcharsel.c[num].generic.type		= MTYPE_PTEXT;
+			s_xqcharsel.c[num].generic.name		= chars[num].name;
+			s_xqcharsel.c[num].generic.flags	= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
+			s_xqcharsel.c[num].generic.x		= charx;
+			s_xqcharsel.c[num].generic.y		= chary + num * 30;
+			s_xqcharsel.c[num].generic.id		= ID_CHAR + num;
+			s_xqcharsel.c[num].generic.callback	= menuEvent;
+			s_xqcharsel.c[num].string			= chars[num].name;
+			s_xqcharsel.c[num].color			= color_white;
+			s_xqcharsel.c[num].style			= UI_LEFT;
 			num++;
-			if (num == 7) break;
+
+			if (num == 8) break;
 		}
 		tok1 = strtok(NULL, "|");
 	}
 
-//Com_Printf("Done chars. models: [%s]\n", models);
 
-	for (int i = num;  i < 8;  i++) {
-		xqcharselMenuInfo.c[i].generic.type                 = MTYPE_PTEXT;
-		xqcharselMenuInfo.c[i].generic.name					= "Empty slot";
-		xqcharselMenuInfo.c[i].generic.flags                = QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-		xqcharselMenuInfo.c[i].generic.x                    = 320;
-		xqcharselMenuInfo.c[i].generic.y                    = 150 + i * 30;
-		xqcharselMenuInfo.c[i].generic.id                   = ID_CHAR + i;
-		xqcharselMenuInfo.c[i].generic.callback             = UI_XQCharselMenu_Event;
-		xqcharselMenuInfo.c[i].string                       = "Empty slot";
-		xqcharselMenuInfo.c[i].color                        = color_orange;
-		xqcharselMenuInfo.c[i].style                        = UI_CENTER;
+	int i;
+	for (i = num;  i < 8;  i++) {
+		s_xqcharsel.c[i].generic.type			= MTYPE_PTEXT;
+		s_xqcharsel.c[i].generic.name			= "Empty slot";
+		s_xqcharsel.c[i].generic.flags			= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_xqcharsel.c[i].generic.x				= charx;
+		s_xqcharsel.c[i].generic.y				= chary + i * 30;
+		s_xqcharsel.c[i].generic.id				= ID_CHAR + i;
+		s_xqcharsel.c[i].generic.callback		= menuEvent;
+		s_xqcharsel.c[i].string					= "Empty slot";
+		s_xqcharsel.c[i].color					= color_orange;
+		s_xqcharsel.c[i].style					= UI_LEFT;
+	}
+	for (i = 0;  i < 8;  i++) {
+		s_xqcharsel.arrow[i].generic.type		= MTYPE_BITMAP;
+		s_xqcharsel.arrow[i].generic.name		= ART_ARROW;
+		s_xqcharsel.arrow[i].generic.flags		= QMF_LEFT_JUSTIFY|QMF_INACTIVE;
+		s_xqcharsel.arrow[i].generic.x			= charx - 30;
+		s_xqcharsel.arrow[i].generic.y			= chary + i * 30;
+		s_xqcharsel.arrow[i].width				= 25;
+		s_xqcharsel.arrow[i].height				= 33;
 	}
 
-	xqcharselMenuInfo.accept.generic.type				= MTYPE_BITMAP;
-	xqcharselMenuInfo.accept.generic.name				= ART_ACCEPT0;
-	xqcharselMenuInfo.accept.generic.flags				= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
-	xqcharselMenuInfo.accept.generic.id					= ID_ACCEPT;
-	xqcharselMenuInfo.accept.generic.callback			= UI_XQCharselMenu_Event;
-	xqcharselMenuInfo.accept.generic.x					= 640;
-	xqcharselMenuInfo.accept.generic.y					= 480-64;
-	xqcharselMenuInfo.accept.width						= 128;
-	xqcharselMenuInfo.accept.height						= 64;
-	xqcharselMenuInfo.accept.focuspic					= ART_ACCEPT1;
+	s_xqcharsel.delete.generic.type				= MTYPE_BITMAP;
+	s_xqcharsel.delete.generic.name				= ART_DELETE0;
+	s_xqcharsel.delete.generic.flags			= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_xqcharsel.delete.generic.id				= ID_DELETE;
+	s_xqcharsel.delete.generic.callback			= menuEvent;
+	s_xqcharsel.delete.generic.x				= 640;
+	s_xqcharsel.delete.generic.y				= 480-64;
+	s_xqcharsel.delete.width					= 128;
+	s_xqcharsel.delete.height					= 64;
+	s_xqcharsel.delete.focuspic					= ART_DELETE1;
 
-	xqcharselMenuInfo.back.generic.type					= MTYPE_BITMAP;
-	xqcharselMenuInfo.back.generic.name					= ART_BACK0;
-	xqcharselMenuInfo.back.generic.flags				= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
-	xqcharselMenuInfo.back.generic.id					= ID_BACK;
-	xqcharselMenuInfo.back.generic.callback				= UI_XQCharselMenu_Event;
-	xqcharselMenuInfo.back.generic.x					= 0;
-	xqcharselMenuInfo.back.generic.y					= 480-64;
-	xqcharselMenuInfo.back.width						= 128;
-	xqcharselMenuInfo.back.height						= 64;
-	xqcharselMenuInfo.back.focuspic						= ART_BACK1;
+	s_xqcharsel.enter.generic.type				= MTYPE_BITMAP;
+	s_xqcharsel.enter.generic.name				= ART_ENTER0;
+	s_xqcharsel.enter.generic.flags				= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_xqcharsel.enter.generic.id				= ID_ENTER;
+	s_xqcharsel.enter.generic.callback			= menuEvent;
+	s_xqcharsel.enter.generic.x					= 440;
+	s_xqcharsel.enter.generic.y					= 480-64;
+	s_xqcharsel.enter.width						= 128;
+	s_xqcharsel.enter.height					= 64;
+	s_xqcharsel.enter.focuspic					= ART_ENTER1;
 
-	Menu_AddItem( &xqcharselMenuInfo.menu, &xqcharselMenuInfo.banner );
+
+
+	s_xqcharsel.player.generic.type				= MTYPE_BITMAP;
+	s_xqcharsel.player.generic.flags			= QMF_INACTIVE;
+	s_xqcharsel.player.generic.ownerdraw		= DrawPlayer;
+	s_xqcharsel.player.generic.x				= modelx;
+	s_xqcharsel.player.generic.y				= modely;
+	s_xqcharsel.player.width					= 32*10;
+	s_xqcharsel.player.height					= 56*10;
+
+	s_xqcharsel.pname.generic.type				= MTYPE_PTEXT;
+	s_xqcharsel.pname.generic.x					= modelx + 90;
+	s_xqcharsel.pname.generic.y					= modely + 80;
+	s_xqcharsel.pname.string					= "";
+	s_xqcharsel.pname.color						= color_yellow;
+	s_xqcharsel.pname.style						= UI_SMALLFONT|UI_CENTER;
+
+	s_xqcharsel.pzone.generic.type				= MTYPE_PTEXT;
+	s_xqcharsel.pzone.generic.x					= modelx + 90;
+	s_xqcharsel.pzone.generic.y					= modely + 100;
+	s_xqcharsel.pzone.string					= "";
+	s_xqcharsel.pzone.color						= color_yellow;
+	s_xqcharsel.pzone.style						= UI_SMALLFONT|UI_CENTER;
+
+
 	for (int i = 0;  i < 8;  i++) {
-		Menu_AddItem( &xqcharselMenuInfo.menu, &xqcharselMenuInfo.c[i] );
+		Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.c[i]);
+		Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.arrow[i]);
 	}
-	Menu_AddItem( &xqcharselMenuInfo.menu, &xqcharselMenuInfo.accept );
-	if( uis.menusp ) {
-		Menu_AddItem( &xqcharselMenuInfo.menu, &xqcharselMenuInfo.back );
-	}
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.banner);
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.delete);
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.enter);
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.player);
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.pname);
+	Menu_AddItem(&s_xqcharsel.menu, &s_xqcharsel.pzone);
 
 	// set the global xq_playable_models array with the playable model path, gender and race info
 	// that is used by the char creator menu
@@ -242,36 +329,29 @@ static void UI_XQCharselMenu_Init( char *ss ) {
 			char path[XQ_MODEL_MAX_PATH] = {0};
 			int ret = sscanf(tok1, "%i.%i.%i.%s", &race, &gender, &facenum, path);
 			if (strlen(path) > 0 && strlen(path) <= XQ_MODEL_MAX_PATH && ret == 4) {
-				Q_strncpyz(xq_playable_models[race][gender].path, path, sizeof(xq_playable_models[race][gender].path));
+				Q_strncpyz(
+					xq_playable_models[race][gender].path,
+					path,
+					sizeof(xq_playable_models[race][gender].path));
 				xq_playable_models[race][gender].numfaces = facenum;
-//Com_Printf("Copying: [%s]\n", path);
 			}
 			tok1 = strtok(NULL, "^");
 		}
 	}
-
 }
 
-/*
-=================
-UI_XQCharsel_Cache
-=================
-*/
-void UI_XQCharsel_Cache( void ) {
-	trap_R_RegisterShaderNoMip( ART_ACCEPT0 );
-	trap_R_RegisterShaderNoMip( ART_ACCEPT1 );
-	trap_R_RegisterShaderNoMip( ART_BACK0 );
-	trap_R_RegisterShaderNoMip( ART_BACK1 );
-	trap_R_RegisterShaderNoMip( ART_FRAME );
+void UI_XQCharsel_Cache(void) {
+	trap_R_RegisterShaderNoMip(ART_ARROW);
+	trap_R_RegisterShaderNoMip(ART_DELETE0);
+	trap_R_RegisterShaderNoMip(ART_DELETE1);
+	trap_R_RegisterShaderNoMip(ART_ENTER0);
+	trap_R_RegisterShaderNoMip(ART_ENTER1);
 }
+void UI_XQCharselMenu(char *s) {
+	trap_Cvar_Set("xq_charDelete", "0");
+	selected_slot = -1;
+	updateModel();
 
-
-/*
-===============
-UI_XQCharselMenu
-===============
-*/
-void UI_XQCharselMenu( char *s ) {
 	// remove trailing \n
 	if (strlen(s) > 0) {
 		if (s[strlen(s)-1] == '\n') {
@@ -284,11 +364,12 @@ void UI_XQCharselMenu( char *s ) {
 		go_straight_to_charcreation = 1;
 		s[1] = '0';
 	}
-	UI_XQCharselMenu_Init(s);
-	UI_PushMenu(&xqcharselMenuInfo.menu);
+	menuInit(s);
+	UI_PushMenu(&s_xqcharsel.menu);
 
 	if (go_straight_to_charcreation) {
 		go_straight_to_charcreation = 0;
 		UI_XQCharCreatorMenu("Name unavailable");
 	}
+	showArrow();
 }

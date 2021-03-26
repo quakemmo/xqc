@@ -102,6 +102,7 @@ cvar_t	*cl_acctname;
 cvar_t	*xq_debugInfo;
 cvar_t	*xq_charcreation_data;
 cvar_t	*xq_charSelOn; // If we're on the char selection or char creation screen, this is "1"
+cvar_t	*xq_charDelete;
 // XXX -xqx
 cvar_t	*cl_sensitivity;
 
@@ -3618,6 +3619,7 @@ void CL_Init( void ) {
 	xq_debugInfo = Cvar_Get( "xq_debugInfo", "0", CVAR_TEMP);
 	xq_charcreation_data = Cvar_Get( "xq_charcreation_data", "", CVAR_USERINFO);
 	xq_charSelOn = Cvar_Get( "xq_charSelOn", "0", CVAR_TEMP);
+	xq_charDelete = Cvar_Get( "xq_charDelete", "0", CVAR_USERINFO);
 	xq_pers_init();
 // XXX -xqx
 

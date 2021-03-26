@@ -85,7 +85,7 @@ typedef struct {
 
 // the parseEntities array must be large enough to hold PACKET_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
-// it can be un-deltad from the original 
+// it can be un-deltad from the original
 #define	MAX_PARSE_ENTITIES	( PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES )
 
 extern int g_console_field_width;
@@ -164,7 +164,7 @@ demo through a file.
 // that a player can possible see at once, including all container
 // content, presuming trade to another PC window is up and both parties
 // filled it with full containers.
-#define XQ_MAX_ITEM_QUEUE 500 
+#define XQ_MAX_ITEM_QUEUE 500
 typedef struct {
 	xq_item_t item;
 	int	asked;
@@ -424,6 +424,7 @@ extern  cvar_t  *cl_patcherpath;
 extern  cvar_t  *xq_debugInfo;
 extern  cvar_t  *xq_charcreation_data;
 extern  cvar_t  *xq_charSelOn;
+extern  cvar_t  *xq_charDelete;
 // XXX -xqx
 
 extern	cvar_t	*cl_mouseAccel;

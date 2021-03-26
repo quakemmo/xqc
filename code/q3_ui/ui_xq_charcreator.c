@@ -99,7 +99,6 @@ static void XQCharCreator_UpdateModel(void) {
 	VectorClear(moveangles);
 
 	pi->race = selected_race;
-	pi->face = selected_face;
 
 	char *path = xq_playable_models[selected_race][selected_gender].path;
 
