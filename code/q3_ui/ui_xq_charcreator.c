@@ -552,7 +552,9 @@ static void XQCharCreator_MenuInit(void) {
 }
 
 void UI_XQCharCreatorMenu(char *status) {
-	XQCharCreator_MenuInit();
+	if (!status[0]) {
+		XQCharCreator_MenuInit();
+	}
 	UI_PushMenu(&s_xqchar.menu);
 	st(status);
 }

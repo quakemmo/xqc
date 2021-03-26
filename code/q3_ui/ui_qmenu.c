@@ -230,6 +230,17 @@ static void PText_Draw( menutext_s *t )
 		}
 	}
 
+// XXX xqx
+	if( t->generic.flags & QMF_HIGHLIGHT_IF_FOCUS ) {
+		if( Menu_ItemAtCursor( t->generic.parent ) == t ) {
+			color = color_yellow;
+		}
+		else {
+			color = t->color;
+		}
+	}
+// XXX -xqx
+
 	UI_DrawProportionalString( x, y, t->string, style, color );
 }
 

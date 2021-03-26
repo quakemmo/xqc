@@ -46,7 +46,11 @@ xq_model_t xq_playable_models[XQ_RACES][2];
 
 
 static void updateModel(void) {
+	static char pname[200] = {0};
+	static char pzone[200] = {0};
 	if (selected_slot == -1) {
+		pname[0] = 0;
+		pzone[0] = 0;
 		return;
 	}
 
@@ -69,20 +73,13 @@ static void updateModel(void) {
 
 	// Set the player name, level, class and zone text
 	// appearing above the model
-	static char pname[200] = {0};
-	static char pzone[200] = {0};
 
-	if (selected_slot != -1) {
-		snprintf(pname, 200, "%s (%i %s)",
-			chars[selected_slot].name,
-			chars[selected_slot].level,
-			xq_class_lit(chars[selected_slot].class, 0, 0)
-		);
-		snprintf(pzone, 200, "%s", chars[selected_slot].zone);
-	} else {
-		pname[0] = 0;
-		pzone[0] = 0;
-	}
+	snprintf(pname, 200, "%s (%i %s)",
+		chars[selected_slot].name,
+		chars[selected_slot].level,
+		xq_class_lit(chars[selected_slot].class, 0, 0)
+	);
+	snprintf(pzone, 200, "%s", chars[selected_slot].zone);
 	s_xqcharsel.pname.string = pname;
 	s_xqcharsel.pzone.string = pzone;
 }
@@ -222,13 +219,13 @@ static void menuInit(char *ss) {
 
 			s_xqcharsel.c[num].generic.type		= MTYPE_PTEXT;
 			s_xqcharsel.c[num].generic.name		= chars[num].name;
-			s_xqcharsel.c[num].generic.flags	= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
+			s_xqcharsel.c[num].generic.flags	= QMF_LEFT_JUSTIFY|QMF_HIGHLIGHT_IF_FOCUS;
 			s_xqcharsel.c[num].generic.x		= charx;
 			s_xqcharsel.c[num].generic.y		= chary + num * 30;
 			s_xqcharsel.c[num].generic.id		= ID_CHAR + num;
 			s_xqcharsel.c[num].generic.callback	= menuEvent;
 			s_xqcharsel.c[num].string			= chars[num].name;
-			s_xqcharsel.c[num].color			= color_white;
+			s_xqcharsel.c[num].color			= color_red;
 			s_xqcharsel.c[num].style			= UI_LEFT;
 			num++;
 
@@ -242,7 +239,7 @@ static void menuInit(char *ss) {
 	for (i = num;  i < 8;  i++) {
 		s_xqcharsel.c[i].generic.type			= MTYPE_PTEXT;
 		s_xqcharsel.c[i].generic.name			= "Empty slot";
-		s_xqcharsel.c[i].generic.flags			= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_xqcharsel.c[i].generic.flags			= QMF_LEFT_JUSTIFY|QMF_HIGHLIGHT_IF_FOCUS;
 		s_xqcharsel.c[i].generic.x				= charx;
 		s_xqcharsel.c[i].generic.y				= chary + i * 30;
 		s_xqcharsel.c[i].generic.id				= ID_CHAR + i;
