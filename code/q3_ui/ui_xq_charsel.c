@@ -155,6 +155,7 @@ static void menuEvent(void *ptr, int event) {
 
 		case ID_ENTER:;
 			charname = (char *)s_xqcharsel.c[selected_slot].generic.name;
+			trap_Cvar_Set("cl_xq_mousemode", "0");
 			trap_Cvar_Set("cl_charname", charname);
 			trap_Cvar_Set("xq_charDelete", "0");
 			trap_Cvar_Set("xq_charSelOn", "0");
