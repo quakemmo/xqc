@@ -1423,3 +1423,18 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	VectorClear( mins );
 	VectorClear( maxs );
 }
+
+// XXX xqx
+int XQ_TagExists(const char *name, qhandle_t handle) {
+	mdvTag_t	*tag;
+	model_t		*model;
+
+	model = R_GetModelByHandle(handle);
+	tag = R_GetTag(model->mdv[0], 0, name);
+
+	if (!tag) {
+		return 0;
+	}
+	return 1;
+}
+// XXX -xqx

@@ -1259,6 +1259,7 @@ void RB_EndSurface(void);
 void RB_CheckOverflow( int verts, int indexes );
 // XXX xqx
 void RB_XQName(void);
+int XQ_TagExists(const char *name, qhandle_t handle);
 // XXX -xqx
 #define RB_CHECKOVERFLOW(v,i) if (tess.numVertexes + (v) >= SHADER_MAX_VERTEXES || tess.numIndexes + (i) >= SHADER_MAX_INDEXES ) {RB_CheckOverflow(v,i);}
 

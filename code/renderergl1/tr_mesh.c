@@ -319,7 +319,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	// when the surfaces are rendered, they don't need to be
 	// range checked again.
 	//
-	if ( (ent->e.frame >= tr.currentModel->md3[0]->numFrames) 
+	if ( (ent->e.frame >= tr.currentModel->md3[0]->numFrames)
 		|| (ent->e.frame < 0)
 		|| (ent->e.oldframe >= tr.currentModel->md3[0]->numFrames)
 		|| (ent->e.oldframe < 0) ) {
@@ -366,27 +366,27 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 // XXX xqx
 		// skipxxxTint is used in Arena zones to emphasize player model
-		if (!strcmp(surface->name, "a_feet")) {
+		if (!strcmp(surface->name, "l_feet")) {
 			shader = R_GetShaderByHandle(ent->e.feetShader);
 			if (ent->e.skipFeetTint == 0) {
 				apply_tint(shader, ent->e.feetTint, ent);
 			}
-		} else if (!strcmp(surface->name, "a_arms")) {
+		} else if (!strcmp(surface->name, "u_arms")) {
 			shader = R_GetShaderByHandle(ent->e.armsShader);
 			if (ent->e.skipArmsTint == 0) {
 				apply_tint(shader, ent->e.armsTint, ent);
 			}
-		} else if (!strcmp(surface->name, "a_leftwrist")) {
+		} else if (!strcmp(surface->name, "u_leftwrist")) {
 			shader = R_GetShaderByHandle(ent->e.leftwristShader);
 			if (ent->e.skipLeftwristTint == 0) {
 				apply_tint(shader, ent->e.leftwristTint, ent);
 			}
-		} else if (!strcmp(surface->name, "a_rightwrist")) {
+		} else if (!strcmp(surface->name, "u_rightwrist")) {
 			shader = R_GetShaderByHandle(ent->e.rightwristShader);
 			if (ent->e.skipRightwristTint == 0) {
 				apply_tint(shader, ent->e.rightwristTint, ent);
 			}
-		} else if (!strcmp(surface->name, "a_hands")) {
+		} else if (!strcmp(surface->name, "u_hands")) {
 			shader = R_GetShaderByHandle(ent->e.handsShader);
 			if (ent->e.skipHandsTint == 0) {
 				apply_tint(shader, ent->e.handsTint, ent);

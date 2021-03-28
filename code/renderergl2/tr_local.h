@@ -1957,6 +1957,7 @@ qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
 // XXX xqx  
 void		RB_XQName(void);
+int			XQ_TagExists(const char *name, qhandle_t handle);
 // XXX -xqx 
 void		RE_Shutdown( qboolean destroyWindow );
 

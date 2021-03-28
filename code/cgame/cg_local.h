@@ -1643,8 +1643,9 @@ void		trap_R_LoadWorldMap( const char *mapname );
 qhandle_t	trap_R_RegisterModel( const char *name );			// returns rgb axis if not found
 qhandle_t	trap_R_RegisterSkin( const char *name );			// returns all white if not found
 // XXX xqx
-qhandle_t	trap_R_XQ_TShader( const char *name , int level);
-void		trap_ConNotify(void );
+qhandle_t	trap_R_XQ_TShader(const char *name, int level);
+int			trap_XQ_TagExists(const char *name, qhandle_t handle);
+void		trap_ConNotify(void);
 void		trap_XQ_Encrypt(void *data, int len, char *key, int keylen);
 void		trap_XQ_Decrypt(void *data, int len, char *key, int keylen);
 int			trap_XQ_CryptoPad(byte *padded_data, const byte *data, int len, int pad_len);

@@ -574,6 +574,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 // XXX xqx
 	case CG_R_XQ_TSHADER:
 		return re.XQ_TShader( VMA(1), args[2]);
+	case CG_XQ_TAGEXISTS:
+		return re.XQ_TagExists( VMA(1), args[2]);
 	case CG_R_XQ_SCREENSHOTZONING:
 		re.XQ_ScreenShotZoning();
 		return 0;

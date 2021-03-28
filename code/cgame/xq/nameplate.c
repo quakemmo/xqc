@@ -32,13 +32,28 @@ static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, in
 
 
 	if (refent) {
-		CG_PositionRotatedEntityOnTag(&ent, refent, refent->hModel, "tag_head");
-		ent.origin[2] += 14;
+
+		char *tag = "tag_head";
+		int add_height = 24;
+
+
+		// if we have specified a tag for the nameplate, use that
+		if (trap_XQ_TagExists("tag_nameplate", refent->hModel)) {
+			tag = "tag_nameplate";
+			add_height = 0;
+		}
+		CG_PositionRotatedEntityOnTag(&ent, refent, refent->hModel, tag);
+		ent.origin[2] += add_height;
+
+
+		// If the model scaled smaller, readjust the nameplate height
+		// so it isn't brought too close to the model due to the scaling.
 		float scale = (float)cent->currentState.xq_app_model_scale;
-		if (scale > 100) {
-			ent.origin[2] += scale * .07;
-		} else if (scale < 100) {
-			ent.origin[2] -= scale * .07;
+		if (scale < 100 && scale != 0) {
+			float zdiff = ent.origin[2] - refent->origin[2];
+			zdiff /= scale;
+			zdiff *= 100;
+			ent.origin[2] = refent->origin[2] + zdiff;
 		}
 	}
 

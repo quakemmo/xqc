@@ -1372,6 +1372,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	// XXX xqx
 	re.XQ_TShader = RE_XQ_TShader;
 	re.XQ_ScreenShotZoning = R_ScreenShotZoning_f;
+	re.XQ_TagExists = XQ_TagExists;
 	// XXX -xqx
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;

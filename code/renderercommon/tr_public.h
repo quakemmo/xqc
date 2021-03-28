@@ -49,10 +49,11 @@ typedef struct {
 	qhandle_t (*RegisterSkin)( const char *name );
 	qhandle_t (*RegisterShader)( const char *name );
 	qhandle_t (*RegisterShaderNoMip)( const char *name );
-// XXX xqx  
+// XXX xqx
+	int (*XQ_TagExists)(const char *name, qhandle_t handle);
 	qhandle_t (*XQ_TShader)(const char *name, int level);
 	void (*XQ_ScreenShotZoning)(void);
-// XXX -xqx 
+// XXX -xqx
 	void	(*LoadWorld)( const char *name );
 
 	// the vis data is a large enough block of data that we go to the trouble

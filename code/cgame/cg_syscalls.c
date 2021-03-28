@@ -49,6 +49,9 @@ void	trap_Print( const char *fmt ) {
 qhandle_t trap_R_XQ_TShader(const char *name, int level) {
 	return syscall(CG_R_XQ_TSHADER, name, level);
 }
+int trap_XQ_TagExists(const char *name, qhandle_t handle) {
+	return syscall(CG_XQ_TAGEXISTS, name, handle);
+}
 void trap_ConNotify(void) {
 	syscall(CG_XQ_CON_NOTIFY);
 }
