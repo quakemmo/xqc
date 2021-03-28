@@ -2,6 +2,10 @@
 #define XQ_JSON_OK							0
 #define XQ_JSON_UNKNOWN_SERVER_ERROR		1
 
+#define XQ_CHAR_CLEAR						16 // Sent on initial world entry to clear chat box
+#define XQ_CHAR_PERCENT						30 // % replacement for textual comms
+#define XQ_CHAR_DOUBLEQUOTE					29 // " replacement
+
 
 #define XQ_MAX_PASSWORD_LEN					40
 #define XQ_MAX_CHARS_PER_ACCOUNT			8

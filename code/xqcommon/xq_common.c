@@ -506,20 +506,20 @@ int xq_class_race_combo(int class, int race) {
 
 
 // We do not transmit % and " in strings over the network,
-// these chars are replaced by ascii 30 and 29 values.
+// these chars are replaced by non-printable ascii values.
 // This function is called right before drawing the actual character on the screen,
 // so we draw the proper character.
 char xq_netchars_unescape(char in) {
 	switch (in) {
-		case 30:	return '%';
-		case 29:	return '"';
-		default:	return in;
+		case XQ_CHAR_PERCENT:		return '%';
+		case XQ_CHAR_DOUBLEQUOTE:	return '"';
+		default:					return in;
 	}
 }
 char xq_netchars_escape(char in) {
 	switch (in) {
-		case '%':	return 30;
-		case '"':	return 29;
+		case '%':	return XQ_CHAR_PERCENT;
+		case '"':	return XQ_CHAR_DOUBLEQUOTE;
 		default:	return in;
 	}
 }

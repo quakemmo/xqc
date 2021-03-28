@@ -174,6 +174,14 @@ void xq_chat_add(char *txt, int color) {
 		xq_chat_init();
 	}
 
+
+	// We are sent XQ_CHAR_CLEAR upon world entry (not on subsequent zoning)
+	// We must just clear the chat buffer when this happens.
+	if (txt[0] == XQ_CHAR_CLEAR) {
+		memset(chat, 0, sizeof(chat_t));
+		return;
+	}
+
 	int i;
 	for (i = 0;  i < MAX_LINES;  i++) {
 		if (!chat->line[i].ts) {

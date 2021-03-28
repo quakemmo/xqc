@@ -27,7 +27,7 @@ key up events are sent even if in console mode
 
 XXX xqx: experimental attempt at a parallel bind sets for mouse mode (MM)
 A few functions are duplicated and slightly modified, with MM_ prepended to their names.
-This needs to be redone properly when the quirks are figured out.
+This needs to be redone properly once the quirks are figured out.
 */
 
 field_t	historyEditLines[COMMAND_HISTORY];

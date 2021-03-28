@@ -11,7 +11,6 @@ void xq_serverlog(const char *buf) {
 	// can contain one or more actual messages that are bunched up for ease of transmission.
 
 	const char *ptr = buf;
-	int count = 0;
 	char lenlit[CLOG_LENLIT+1] = {0};
 	char txt[CLOG_MAX_LEN+1] = {0};
 
@@ -41,10 +40,11 @@ void xq_serverlog(const char *buf) {
 		if (!ptr[0]) {
 			done = 1;
 		}
+
+
 		if (!(flags & XQ_CLOG_EMPHASIZE_ONLY)) {
 			xq_clog(color, "%s" , txt);
 		}
-		count++;
 		if (flags & XQ_CLOG_EMPHASIZE || flags & XQ_CLOG_EMPHASIZE_ONLY) {
 			xq_debdisp(color - 48, xq_msec() + 3000, "%s", txt);
 		}
@@ -60,8 +60,11 @@ void xq_clog(int color, char *fmt, ...) {
 	va_end(argptr);
 
 
-	// put the line in the console
-	CG_Printf("[XQ] ^%i%s\n", color - 48, (char *)&buf);
+	// put the line in the console / log files
+	// Unless it's a clear request
+	if (buf[0] != XQ_CHAR_CLEAR) {
+		CG_Printf("[XQ] ^%i%s\n", color - 48, (char *)&buf);
+	}
 
 
 	// put the line in the chat window
