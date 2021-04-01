@@ -296,6 +296,9 @@ rescan:
 				// Clear character name and reconnect - this should take us to a charsel screen
 				Cvar_Set("cl_charname", "");
 				CL_Reconnect_f();
+			} else if (xq_seq(Cmd_Argv(1), "exit")) {
+				// This is used for guest characters camping
+				exit(0);
 			} else {
 				Com_Error( ERR_SERVERDISCONNECT, "Server disconnected - %s", Cmd_Argv( 1 ) );
 			}
