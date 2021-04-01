@@ -14,8 +14,12 @@
 
 static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, int alpha, vec3_t col) {
     int rf = 0;
-    if (cent->currentState.number == cg.snap->ps.clientNum && !cg.renderingThirdPerson) {
-        rf = RF_THIRD_PERSON;       // only show in mirrors
+	float scale = (float)cent->currentState.xq_app_model_scale;
+    if (cent->currentState.number == cg.snap->ps.clientNum) {
+		scale = cg.snap->ps.xq_app_model_scale;
+		if (!cg.renderingThirdPerson) {
+			rf = RF_THIRD_PERSON;       // only show in mirrors
+		}
     }
 
     refEntity_t ent = {0};
@@ -32,9 +36,8 @@ static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, in
 
 
 	if (refent) {
-
 		char *tag = "tag_head";
-		int add_height = 24;
+		int add_height = 14;
 
 
 		// if we have specified a tag for the nameplate, use that
@@ -43,18 +46,11 @@ static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, in
 			add_height = 0;
 		}
 		CG_PositionRotatedEntityOnTag(&ent, refent, refent->hModel, tag);
-		ent.origin[2] += add_height;
-
-
-		// If the model scaled smaller, readjust the nameplate height
-		// so it isn't brought too close to the model due to the scaling.
-		float scale = (float)cent->currentState.xq_app_model_scale;
-		if (scale < 100 && scale != 0) {
-			float zdiff = ent.origin[2] - refent->origin[2];
-			zdiff /= scale;
-			zdiff *= 100;
-			ent.origin[2] = refent->origin[2] + zdiff;
+		if (scale > 100) {
+			float n = (add_height / 100.0) * scale;
+			add_height = n;
 		}
+		ent.origin[2] += add_height;
 	}
 
     trap_R_AddRefEntityToScene(&ent);
