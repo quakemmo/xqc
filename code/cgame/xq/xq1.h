@@ -10,7 +10,6 @@
 #define XQ_SPELL							2
 #define XQ_INFO								3
 
-#define XQ_BOOK_PAGES						20
 #define XQ_WEAPON_SELECTOR_H2H				401
 #define XQ_MAX_UTILMODELS					100     // How many utilmodels can be registered 
 #define XQ_LOW_ENERGY_WARNING				2		// If the player has less than that many shots of current weapon worth of energy, they will get a low energy warning

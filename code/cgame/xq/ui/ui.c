@@ -270,7 +270,7 @@ void xqui_Frame(void) {
 			xqui_TradeOpen();
 		}
 	} else {
-		if (!(ps->xq_flags & XQ_TRADING_PC) && !(ps->xq_flags & XQ_TRADING_NPC)) { 
+		if (!(ps->xq_flags & XQ_TRADING_PC) && !(ps->xq_flags & XQ_TRADING_NPC)) {
 			xqui_ContainerClose(XQ_ITEM_SLOT_TRADE_GIVE1, 0);
 			xqui_ContainerClose(XQ_ITEM_SLOT_TRADE_GIVE2, 0);
 			xqui_ContainerClose(XQ_ITEM_SLOT_TRADE_GIVE3, 0);
@@ -413,7 +413,7 @@ void xqui_InvSlotUnselectAll(void) {
 	for (int i = 1;  i < QW_MAX_OBJ;  i++) {
 		qw_obj_t *o = &qws->obj[i];
 		if (o->type == QW_OBJ_INVSLOT) {
-			if (o->selected == 1) {	
+			if (o->selected == 1) {
 				o->selected = 0;
 			}
 		}
@@ -488,9 +488,9 @@ void 		xqui_BookPageRefresh(void) {
 		xq_clog(COLOR_RED, "Current book page is %i - correcting to 1", page);
 		page = 1;
 	}
-	if (page > XQ_BOOK_PAGES) {
-		xq_clog(COLOR_RED, "Current book page is %i - correcting to %i", page, XQ_BOOK_PAGES);
-		page = XQ_BOOK_PAGES;
+	if (page > XQ_SPELL_BOOK_PAGES) {
+		xq_clog(COLOR_RED, "Current book page is %i - correcting to %i", page, XQ_SPELL_BOOK_PAGES);
+		page = XQ_SPELL_BOOK_PAGES;
 	}
 
 
@@ -520,7 +520,7 @@ void 		xqui_BookButtons() {
 	qw_obj_t *o;
 	if (i > 0) {
 		o = &qws->obj[i];
-		o->hidden = (qws->current_book_page < XQ_BOOK_PAGES ? 0 : 1);
+		o->hidden = (qws->current_book_page < XQ_SPELL_BOOK_PAGES ? 0 : 1);
 		o->arg1 = qws->current_book_page + 1;
 	}
 
@@ -874,7 +874,7 @@ void xqui_OpenInspector(int64_t item, int spell) {
 	// Decide on what we're inspecting
 	char buf[QW_MAX_WID+1] = {0};
 	if (item) {
-		snprintf((char *)buf, QW_MAX_WID, "iteminfo %li", item); 
+		snprintf((char *)buf, QW_MAX_WID, "iteminfo %li", item);
 	} else {
 		snprintf((char *)buf, QW_MAX_WID, "spellinfo %i", spell);
 	}
@@ -1125,14 +1125,6 @@ void xqui_SpellBook_Toggle() {
 void xqui_SpellBook() {
 	int win = qw_WindowExists("spellbook");
 	qw_obj_t *open_button = &qws->obj[qws->objhandles[XQ_UI_OBJID_SPELLBOOK_SWITCH]];
-	int coords[] = {
-		200, 50,
-		200, 230,
-		200, 410,
-		-150, 50,
-		-150, 230,
-		-150, 410
-	};
 
 	if (win != -1) {
 		if (qws->spellbook_page == 0) {
@@ -1149,7 +1141,7 @@ void xqui_SpellBook() {
 		}
 		return;
 	}
-			
+
 	// Need to open book
 	qws->swap_spell = 0;
 	qw_window_t w = {
@@ -1173,11 +1165,42 @@ void xqui_SpellBook() {
 
 
 	// Add the scribed spell slots
+	// This has to be manually tailored to nicely fit in gfx/2d/misc/spellbook_bg.png
+	int start_x = 120; // top-left corner where...
+	int start_y = 100; // ...the very spell icon will be drawn
+	int end_x = -120; // spells on the rightmost page are drawn that far from the right book border
+	int col_spacing = 150; // column spacing
+	int row_spacing = 150; // row spacing
+	int coords[] = {
+		// 1st column from left
+		start_x + col_spacing * 0, start_y + row_spacing * 0,
+		start_x + col_spacing * 0, start_y + row_spacing * 1,
+		start_x + col_spacing * 0, start_y + row_spacing * 2,
+
+		// 2nd column from left
+		start_x + col_spacing * 1, start_y + row_spacing * 0,
+		start_x + col_spacing * 1, start_y + row_spacing * 1,
+		start_x + col_spacing * 1, start_y + row_spacing * 2,
+
+
+
+		// 1st column from right
+		end_x - col_spacing * 0, start_y + row_spacing * 0,
+		end_x - col_spacing * 0, start_y + row_spacing * 1,
+		end_x - col_spacing * 0, start_y + row_spacing * 2,
+
+		// 2dn column from right
+		end_x - col_spacing * 1, start_y + row_spacing * 0,
+		end_x - col_spacing * 1, start_y + row_spacing * 1,
+		end_x - col_spacing * 1, start_y + row_spacing * 2
+	};
 	qw_obj_t o;
 	qw_ObjInit(&o, QW_OBJ_SPELLBOOK_SLOT);
 	for (int i = 0;  i < XQ_SPELL_BOOK_PAGESPELLS;  i++) {
 		o.slot = i + 1;
 		qw_ObjAttach("spellbook", qw_ObjCreate(&o), coords[i*2], coords[i*2+1], 0, 0);
+		xq_clog(COLOR_WHITE, "attaching spell slot %i at x %i, y %i",
+			i, coords[i*2], coords[i*2+1]);
 	}
 
 
@@ -1576,7 +1599,7 @@ void xqui_TradeOpen() {
 		pc = 1;
 	} else if (ps->xq_flags & XQ_TRADING_NPC) {
 		pc = 0;
-	} 
+	}
 
 
 	if (qw_WindowExists("tradegive") != -1 || qw_WindowExists("tradereceive") != -1) {

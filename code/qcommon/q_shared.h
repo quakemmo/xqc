@@ -1280,6 +1280,12 @@ typedef struct playerState_s {
 	int			xq_spellbook_slot_4;
 	int			xq_spellbook_slot_5;
 	int			xq_spellbook_slot_6;
+	int			xq_spellbook_slot_7;
+	int			xq_spellbook_slot_8;
+	int			xq_spellbook_slot_9;
+	int			xq_spellbook_slot_10;
+	int			xq_spellbook_slot_11;
+	int			xq_spellbook_slot_12;
 
 	int			xq_copper;
 	int			xq_silver;

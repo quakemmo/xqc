@@ -1226,6 +1226,12 @@ netField_t	playerStateFields[] =
 { PSF(xq_spellbook_slot_4), 32},
 { PSF(xq_spellbook_slot_5), 32},
 { PSF(xq_spellbook_slot_6), 32},
+{ PSF(xq_spellbook_slot_7), 32},
+{ PSF(xq_spellbook_slot_8), 32},
+{ PSF(xq_spellbook_slot_9), 32},
+{ PSF(xq_spellbook_slot_10), 32},
+{ PSF(xq_spellbook_slot_11), 32},
+{ PSF(xq_spellbook_slot_12), 32},
 
 { PSF(xq_copper), 32 },
 { PSF(xq_silver), 32 },

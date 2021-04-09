@@ -239,7 +239,7 @@
 #define XQ_SPELL_SLOTS                      6       // How many spell mem slots (gems) are there?
 #define XQ_SPELL_MAX_NAME					64		// Max length of a spell name
 #define XQ_SPELL_BOOK_PAGES					10		// Spell book pages
-#define XQ_SPELL_BOOK_PAGESPELLS            6       // How many spells on every spellbook page
+#define XQ_SPELL_BOOK_PAGESPELLS            12      // How many spells on every spellbook page
 #define XQ_SPELL_MAX_MSG					100		// Max text size for spell messages (cast, fade, etc).
 
 #define XQ_SPELL_TARGET_NONE				0		// target none means spell is disabled
