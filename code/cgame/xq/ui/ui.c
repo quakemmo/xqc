@@ -1189,7 +1189,7 @@ void xqui_SpellBook() {
 		end_x - col_spacing * 0, start_y + row_spacing * 1,
 		end_x - col_spacing * 0, start_y + row_spacing * 2,
 
-		// 2dn column from right
+		// 2nd column from right
 		end_x - col_spacing * 1, start_y + row_spacing * 0,
 		end_x - col_spacing * 1, start_y + row_spacing * 1,
 		end_x - col_spacing * 1, start_y + row_spacing * 2
@@ -1199,8 +1199,6 @@ void xqui_SpellBook() {
 	for (int i = 0;  i < XQ_SPELL_BOOK_PAGESPELLS;  i++) {
 		o.slot = i + 1;
 		qw_ObjAttach("spellbook", qw_ObjCreate(&o), coords[i*2], coords[i*2+1], 0, 0);
-		xq_clog(COLOR_WHITE, "attaching spell slot %i at x %i, y %i",
-			i, coords[i*2], coords[i*2+1]);
 	}
 
 
