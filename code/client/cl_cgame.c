@@ -297,7 +297,7 @@ rescan:
 				Cvar_Set("cl_charname", "");
 				CL_Reconnect_f();
 			} else if (xq_seq(Cmd_Argv(1), "exit")) {
-				// This is used for guest characters camping
+				// This was used for guest characters camping - currently unused
 				exit(0);
 			} else {
 				Com_Error( ERR_SERVERDISCONNECT, "Server disconnected - %s", Cmd_Argv( 1 ) );

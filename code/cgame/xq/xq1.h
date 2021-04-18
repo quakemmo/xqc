@@ -11,7 +11,7 @@
 #define XQ_INFO								3
 
 #define XQ_WEAPON_SELECTOR_H2H				401
-#define XQ_MAX_UTILMODELS					100     // How many utilmodels can be registered 
+#define XQ_MAX_UTILMODELS					100     // How many utilmodels can be registered
 #define XQ_LOW_ENERGY_WARNING				2		// If the player has less than that many shots of current weapon worth of energy, they will get a low energy warning
 
 #define XQ_APP_PATH							"models/app"
@@ -45,7 +45,7 @@ typedef struct xq_particle_status_s {
 #define XQ_MAX_ITEM_MODELS					1000
 typedef struct xq_cgame_state_s {
 	#define 		xq_cgame_state_t_MAGIC			0x9381f9ad
-	int				magics;	
+	int				magics;
 
 	int 			mousex;
 	int 			mousey;
