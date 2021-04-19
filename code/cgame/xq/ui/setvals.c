@@ -92,7 +92,6 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 	snprintf((char *)&xqst->ui_gold, sizeof(xqst->ui_gold), "%i", ps->xq_gold);
 	snprintf((char *)&xqst->ui_platinum, sizeof(xqst->ui_platinum), "%i", ps->xq_platinum);
 
-	//xq_clog(COLOR_WHITE, "mana: %i, mana_max: %i, mana_perc", mana, mana_max, xqst->ui_mana_perc);
 
 	// XP bar
 	xqst->ui_xp_perc = ps->xq_xpperc;
@@ -118,7 +117,6 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 	Q_strncpyz(xqst->ui_group_member_4_name, xq_GroupName(ps, 4), XQ_MAX_CHAR_NAME);
 	Q_strncpyz(xqst->ui_group_member_5_name, xq_GroupName(ps, 5), XQ_MAX_CHAR_NAME);
 
-
 	xqst->ui_group_member_1_hp_perc = ps->xq_group_member1_hp_perc;
 	xqst->ui_group_member_2_hp_perc = ps->xq_group_member2_hp_perc;
 	xqst->ui_group_member_3_hp_perc = ps->xq_group_member3_hp_perc;
@@ -131,12 +129,10 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 	qws->obj[qws->objhandles[XQ_UI_OBJID_GROUP_MEMBER_4_NAME]].group_leader = (ps->xq_group_leader == 4 ? 1 : 0);
 	qws->obj[qws->objhandles[XQ_UI_OBJID_GROUP_MEMBER_5_NAME]].group_leader = (ps->xq_group_leader == 5 ? 1 : 0);
 
-	//xq_clog(COLOR_WHITE, "MAIN:   [%s]: %s  [%s]: %s  [%s]: %s  [%s]: %s  [%s]: %s  ", xqst->ui_group_member_1_name, group_m1, xqst->ui_group_member_2_name, group_m2, xqst->ui_group_member_3_name, group_m3, xqst->ui_group_member_4_name, group_m4, xqst->ui_group_member_5_name, group_m5);
 
 	// See if someone joined the group
 	char *cptr;
 	for (cptr = xqst->ui_group_member_1_name;  cptr <= xqst->ui_group_member_5_name;  cptr += (XQ_MAX_CHAR_NAME+1)) {
-		//xq_clog(COLOR_WHITE, "Comparing %s to [%s], [%s], [%s], [%s], [%s]", cptr, group_m1, group_m2, group_m3, group_m4, group_m5);
 		if (
 			!xq_seq(cptr, group_m1) &&
 			!xq_seq(cptr, group_m2) &&
@@ -150,7 +146,7 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 		}
 	}
 
-	// See if someone left the group
+	// See if someone just left the group
 	for (cptr = group_m1;  cptr <= group_m5;  cptr += (XQ_MAX_CHAR_NAME+1)) {
 		if (
 			!xq_seq(cptr, xqst->ui_group_member_1_name) &&
@@ -169,11 +165,11 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 
 	if (check_group_disband == 1) {
 		if (
-				!xqst->ui_group_member_1_name[0] &&
-				!xqst->ui_group_member_2_name[0] &&
-				!xqst->ui_group_member_3_name[0] &&
-				!xqst->ui_group_member_4_name[0] &&
-				!xqst->ui_group_member_5_name[0]
+			!xqst->ui_group_member_1_name[0] &&
+			!xqst->ui_group_member_2_name[0] &&
+			!xqst->ui_group_member_3_name[0] &&
+			!xqst->ui_group_member_4_name[0] &&
+			!xqst->ui_group_member_5_name[0]
 		) {
 			xq_clog(COLOR_WHITE, "Your group has been disbanded.");
 		}
@@ -185,4 +181,4 @@ void xqui_SetVals(centity_t *cent, centity_t *tcent, playerState_t *ps) {
 	Q_strncpyz(group_m3, xqst->ui_group_member_3_name, XQ_MAX_CHAR_NAME);
 	Q_strncpyz(group_m4, xqst->ui_group_member_4_name, XQ_MAX_CHAR_NAME);
 	Q_strncpyz(group_m5, xqst->ui_group_member_5_name, XQ_MAX_CHAR_NAME);
-}	
+}
