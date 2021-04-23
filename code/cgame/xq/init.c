@@ -123,7 +123,7 @@ void xq_MediaInit(void) {
 	}
 
 
-	int itemmodels_count = 6;
+	int itemmodels_count = 7;
 	for (i = 0;  i < itemmodels_count;  i++) {
 		if (xqst->item_models_registered >= XQ_MAX_ITEM_MODELS) break;
 		qh = trap_R_RegisterModel(va("models/items/%i.md3", i+1));

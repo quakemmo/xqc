@@ -11,7 +11,7 @@
 
 	This needs to be largely redone - remove the legacy (but working) ItemInfo and SpellInfo code,
 	and channel everything through InfoInfo, which in turn needs to be made a lot more robust.
-	Since InfoInfo doesn't implement any caching mechanism, Item/Spell caches can be left in there.
+	Since InfoInfo doesn't implement any caching mechanism, Item/Spell cache code already present can be reused.
 
 	Code in cl_input.c gets stuff from the queues here and sends requests to the server.
 	It only sends one request of each type per client snapshot. It should be able to send a lot more.
