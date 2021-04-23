@@ -35,4 +35,5 @@ Credits
 - the OpenArena project: assets
 - Henrique Lazarini (aka Ails): the 34x34 icon set
 - HornedGodSlaine @ DeviantArt: book background image
-- turbosquid.com for (at least) the 2-handed axe model
+- turbosquid.com: (at least) the 2-handed axe model
+- the Sauerbraten project: a few models
