@@ -68,6 +68,10 @@ static qboolean parse_animation_file(int midx) {
 			} else {
 				CG_Printf("parse_animation_file(%i): Bad footsteps parm in %s: %s\n", midx, path, token);
 			}
+			if (xq_debugAnimodel.integer) {
+				xq_clog(COLOR_WHITE,
+					"parse_animation_file(%i): set footsteps to %i", midx, am->footsteps);
+			}
 			continue;
 		} else if ( !Q_stricmp( token, "sex" ) ) {
 			token = COM_Parse( &text_p );
@@ -81,12 +85,24 @@ static qboolean parse_animation_file(int midx) {
 			} else {
 				am->gender = GENDER_MALE;
 			}
+			if (xq_debugAnimodel.integer) {
+				xq_clog(COLOR_WHITE,
+					"parse_animation_file(%i): set gender to %i", midx, am->gender);
+			}
 			continue;
 		} else if ( !Q_stricmp( token, "fixedlegs" ) ) {
 			am->fixedlegs = qtrue;
+			if (xq_debugAnimodel.integer) {
+				xq_clog(COLOR_WHITE,
+					"parse_animation_file(%i): set fixedlegs to %i", midx, am->fixedlegs);
+			}
 			continue;
 		} else if ( !Q_stricmp( token, "fixedtorso" ) ) {
 			am->fixedtorso = qtrue;
+			if (xq_debugAnimodel.integer) {
+				xq_clog(COLOR_WHITE,
+					"parse_animation_file(%i): set fixedtorso to %i", midx, am->fixedtorso);
+			}
 			continue;
 		}
 
@@ -117,7 +133,14 @@ static qboolean parse_animation_file(int midx) {
 			}
 			break;
 		}
+
 		an[i].firstFrame = atoi( token );
+		if (xq_debugAnimodel.integer) {
+			xq_clog(COLOR_WHITE,
+				"parse_animation_file(%i): anim %i: firstFrame %i", midx, i, an[i].firstFrame);
+		}
+
+
 		// leg only frames are adjusted to not count the upper body only frames
 		if ( i == LEGS_WALKCR ) {
 			skip = an[LEGS_WALKCR].firstFrame - an[TORSO_GESTURE].firstFrame;
@@ -125,6 +148,8 @@ static qboolean parse_animation_file(int midx) {
 		if ( i >= LEGS_WALKCR && i<TORSO_GETFLAG) {
 			an[i].firstFrame -= skip;
 		}
+
+
 
 		token = COM_Parse( &text_p );
 		if ( !token[0] ) {
@@ -134,10 +159,20 @@ static qboolean parse_animation_file(int midx) {
 
 		an[i].reversed = qfalse;
 		an[i].flipflop = qfalse;
+
 		// if numFrames is negative the animation is reversed
 		if (an[i].numFrames < 0) {
 			an[i].numFrames = -an[i].numFrames;
 			an[i].reversed = qtrue;
+		}
+
+
+
+
+		if (xq_debugAnimodel.integer) {
+			xq_clog(COLOR_WHITE,
+				"parse_animation_file(%i): anim %i: numFrames %i, reversed: %i, flipflop: %i",
+					midx, i, an[i].numFrames, an[i].reversed, an[i].flipflop);
 		}
 
 		token = COM_Parse( &text_p );
@@ -145,6 +180,14 @@ static qboolean parse_animation_file(int midx) {
 			break;
 		}
 		an[i].loopFrames = atoi( token );
+		if (xq_debugAnimodel.integer) {
+			xq_clog(COLOR_WHITE,
+				"parse_animation_file(%i): anim %i: loopFrames %i",
+					midx, i, an[i].loopFrames);
+		}
+
+
+
 
 		token = COM_Parse( &text_p );
 		if ( !token[0] ) {
@@ -156,6 +199,12 @@ static qboolean parse_animation_file(int midx) {
 		}
 		an[i].frameLerp = 1000 / fps;
 		an[i].initialLerp = 1000 / fps;
+
+		if (xq_debugAnimodel.integer) {
+			xq_clog(COLOR_WHITE,
+				"parse_animation_file(%i): anim %i: fps %f, frameLerp %i, initialLerp %i",
+					midx, i, fps, an[i].frameLerp, an[i].initialLerp);
+		}
 	}
 
 	if ( i != MAX_ANIMATIONS ) {

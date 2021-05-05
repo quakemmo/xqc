@@ -1,6 +1,7 @@
 ABOUT
 =====
-Quake MMO is an attempt of adding MMO-like features to Quake3.
+Quake MMO is an attempt to add MMO-like features to Quake 3 Arena (Q3A).
+It is a fork of Ioquake3, which is, in turn, a fork of Q3A.
 
 The original Ioquake3 README.md has been moved to README-ioq3.md.
 
@@ -14,10 +15,10 @@ Indentation is TABS, each TAB = 4 spaces.
 As a rule of thumb, readability is more important than performance unless
 150 FPS is being threatened.
 
-Generally speaking K&R / Linux kernel C coding style applies, with the following quirks:
-	- Line length can go up to 125 chars if it seems like a good idea
+Generally speaking, K&R / Linux kernel C coding style applies, with the following quirks:
+	- Line length can go up to 125 chars if it seems like a good idea in a particular situation
 	- Functions have the opening brace on the same line as the function name
-	- Typedefs are a good thing
+	- Typedefs are welcome
 
 
 CONTACT
@@ -37,3 +38,4 @@ Credits
 - HornedGodSlaine @ DeviantArt: book background image
 - turbosquid.com: (at least) the 2-handed axe model
 - the Sauerbraten project: a few models
+

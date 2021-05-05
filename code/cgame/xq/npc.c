@@ -372,7 +372,7 @@ static int leg_anim_arbiter(centity_t *cent, vec3_t m, int *legsOld, int *legs, 
 				cent->pe.legs.yawing = qfalse;
 			}
 		}
-				
+
 	} else if (!m[0] && !m[1] && m[2] < 0) {
 		// We have moved straight down - we don't care about instafalling gravity npcs - we care about flying ones
 		leg_anim = XQ_ANIM_WALK;
@@ -480,8 +480,8 @@ static void torso_anim_arbiter(centity_t *cent, int *torsoOld, int *torso, float
 	int candidate = find_best_candidate_anim(cent);
 
 	// By now we have a candidate anim which will maybe be replacing the currently playing (or finished) one
-	
-	
+
+
 	// Let's see if the current animation can be switched to a new one
 	// If it's an important anim, it has to be finished.
 	// If it's an idle anim, it can be interrupted at any time (we always consider it finished)
@@ -631,68 +631,19 @@ static void anim_q3player(centity_t *cent, int *legsOld, int *legs, float *legsB
 
 	// Decide on leg anim, considering movement since last frame
 	// leg_anim_arbiter() and torso_anim_arbiter() set everything in cent and returns the results just for us to use later if needed
-	int leg_anim = leg_anim_arbiter(cent, m, legsOld, legs, legsBackLerp, am, speedScale); 
+	int leg_anim = leg_anim_arbiter(cent, m, legsOld, legs, legsBackLerp, am, speedScale);
 
 	// We have leg anim figured, let's see if we have a server-specified anim for the torso to use instead of idle
-	torso_anim_arbiter(cent, torsoOld, torso, torsoBackLerp, am, speedScale, leg_anim, &tor); 
+	torso_anim_arbiter(cent, torsoOld, torso, torsoBackLerp, am, speedScale, leg_anim, &tor);
+
 
 	// Maybe play a sound that goes with the torso anim (casting noise, pain argh, etc)
 	sound_arbiter(cent, tor.replace ? tor.candidate_anim : -1, leg_anim, m, tor.idle_variety, am);
 }
 
-static void draw_npc_simple( centity_t *cent ) {
-	// Draw a monolithic model with just one MD3 file (example: elemental pets)
-
-	refEntity_t			ent = {0};
-	entityState_t		*es = &cent->currentState;
-	int model_index = es->xq_app_model;
-	xq_model_t *model = &xq_cmodels[model_index];
-	xq_shader_t *sh;
-
-
-
-	VectorCopy(es->angles, cent->lerpAngles);
-	VectorCopy(cent->lerpOrigin, ent.origin);
-	VectorCopy(cent->lerpOrigin, ent.oldorigin);
-
-	ent.hModel = xq_animodel(model_index)->handle_legs;
-
-	xq_name_plate(cent, NULL);
-
-	vec3_t ang = {0, 0, 0};
-    ang[1] = es->xq_heading;
-    VectorCopy(ang, cent->lerpAngles);
-    AnglesToAxis(ang, ent.axis);
-
-	if (es->xq_app_held_primary_model > 0) {
-		// draw melee weapon or held item
-		xq_draw_held(cent, &ent, NULL, es->xq_app_held_primary_model, 1, 0);
-	} else {
-		// add the gun / barrel / flash
-		// this should only happen if a PC is illusioned to a simple model
-		CG_AddPlayerWeapon(&ent, NULL, cent, -(es->xq_app_held_primary_model), 0);
-	}
-
-	xq_draw_held(cent, &ent, NULL, es->xq_app_held_secondary_model, 2, 0);
-	xq_drawbbox(cent);
-
-	float scale = 1.0f;
-	if (es->xq_app_model_scale != 0) {
-		scale = (1.0 / 100.0) * es->xq_app_model_scale;
-	}
-	VectorScale( ent.axis[0], scale, ent.axis[0] );
-	VectorScale( ent.axis[1], scale, ent.axis[1] );
-	VectorScale( ent.axis[2], scale, ent.axis[2] );
-
-	sh = xq_animodel_ModelShader(model->id, XQ_BODY_PART_LEGS, es->xq_app_texture_num_legs, 0);
-	ent.customShader = sh->shader;
-
-	CG_AddRefEntityWithPowerups(&ent, es, TEAM_FREE);
-
-	xq_particle_arbiter(cent, &ent);
-}
-static void draw_npc_q3player(centity_t *cent, int corpse) {
+static void draw_npc(centity_t *cent, int corpse, int legs_only) {
 	// Draw a composite Q3-style model (head, torso, legs)
+	// Simple models are drawn here as well, if legs_only is set
 
 	int deb = xq_debugNpcDraw.integer;
 	entityState_t		*es = 			&cent->currentState;
@@ -751,40 +702,51 @@ static void draw_npc_q3player(centity_t *cent, int corpse) {
 	}
 
 	legs.hModel = xq_animodel(model_idx)->handle_legs;
-	torso.hModel = xq_animodel(model_idx)->handle_torso;
-	head.hModel = xq_animodel(model_idx)->handle_head;
+	if (!legs_only) {
+		torso.hModel = xq_animodel(model_idx)->handle_torso;
+		head.hModel = xq_animodel(model_idx)->handle_head;
+	}
 
 
 	if (deb) xq_clog(COLOR_WHITE, "%i %i %i", legs.hModel, torso.hModel, head.hModel);
 
-	int tint_head = es->xq_app_texture_num_head >> 8;
-	int tint_torso = es->xq_app_texture_num_torso >> 8;
 	int tint_legs = es->xq_app_texture_num_legs >> 8;
+	int tint_torso = 0, tint_head = 0;
+	if (!legs_only) {
+		tint_torso = es->xq_app_texture_num_torso >> 8;
+		tint_head = es->xq_app_texture_num_head >> 8;
+	}
 
 	if (deb) xq_clog(COLOR_WHITE, "%i %i %i", es->xq_app_texture_num_head, es->xq_app_texture_num_torso, es->xq_app_texture_num_legs);
 	if (deb) xq_clog(COLOR_WHITE, "%i %i %i", tint_head, tint_torso, tint_legs);
 
 	legs.customShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_LEGS, es->xq_app_texture_num_legs, tint_legs)->shader;
 	legs.customTint = tint_legs;
-	torso.customShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_TORSO, es->xq_app_texture_num_torso, tint_torso)->shader;
-	torso.customTint = tint_torso;
-	head.customShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_HEAD, es->xq_app_texture_num_head, tint_head)->shader;
-	head.customTint = tint_head;
+	if (!legs_only) {
+		torso.customShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_TORSO, es->xq_app_texture_num_torso, tint_torso)->shader;
+		torso.customTint = tint_torso;
+		head.customShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_HEAD, es->xq_app_texture_num_head, tint_head)->shader;
+		head.customTint = tint_head;
+	}
 
 	// Some models allow for setting different shaders for different body parts (all playable races at least)
 	// Some others do not - mostly NPC-only models. These have just full body "skins".
 	if (model->full_armor) {
 		legs.feetShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_FEET, es->xq_app_texture_num_feet, tint_legs)->shader;
-		torso.armsShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_ARMS, es->xq_app_texture_num_arms, tint_torso)->shader;
-		torso.leftwristShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_LEFTWRIST, es->xq_app_texture_num_leftwrist, tint_torso)->shader;
-		torso.rightwristShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_RIGHTWRIST, es->xq_app_texture_num_rightwrist, tint_torso)->shader;
-		torso.handsShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_HANDS, es->xq_app_texture_num_hands, tint_torso)->shader;
+		if (!legs_only) {
+			torso.armsShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_ARMS, es->xq_app_texture_num_arms, tint_torso)->shader;
+			torso.leftwristShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_LEFTWRIST, es->xq_app_texture_num_leftwrist, tint_torso)->shader;
+			torso.rightwristShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_RIGHTWRIST, es->xq_app_texture_num_rightwrist, tint_torso)->shader;
+			torso.handsShader = xq_animodel_ModelShader(model->id, XQ_BODY_PART_HANDS, es->xq_app_texture_num_hands, tint_torso)->shader;
+		}
 	} else {
 		legs.feetShader = legs.customShader;
-		torso.armsShader =
-		torso.leftwristShader =
-		torso.rightwristShader =
-		torso.handsShader = torso.customShader;
+		if (!legs_only) {
+			torso.armsShader =
+			torso.leftwristShader =
+			torso.rightwristShader =
+			torso.handsShader = torso.customShader;
+		}
 	}
 
 
@@ -797,8 +759,10 @@ static void draw_npc_q3player(centity_t *cent, int corpse) {
     ang[0] = 0;
     ang[1] = 0;
     ang[2] = 0;
-    AnglesToAxis(ang, torso.axis);
-    AnglesToAxis(ang, head.axis);
+	if (!legs_only) {
+		AnglesToAxis(ang, torso.axis);
+		AnglesToAxis(ang, head.axis);
+	}
 
 
 	float scale = 1.0f;
@@ -809,32 +773,37 @@ static void draw_npc_q3player(centity_t *cent, int corpse) {
 		VectorScale(legs.axis[i], scale, legs.axis[i]);
 	}
 	legs.nonNormalizedAxes = qtrue;
-	torso.nonNormalizedAxes = qtrue;
-	head.nonNormalizedAxes = qtrue;
+	if (!legs_only) {
+		torso.nonNormalizedAxes = qtrue;
+		head.nonNormalizedAxes = qtrue;
+	}
 
 	CG_AddRefEntityWithPowerups(&legs, &cent->currentState, TEAM_FREE);
 
-    CG_PositionRotatedEntityOnTag(&torso, &legs, legs.hModel, "tag_torso");
-    CG_AddRefEntityWithPowerups(&torso, &cent->currentState, TEAM_FREE);
-	xq_particle_arbiter(cent, &torso);
+	CG_PositionRotatedEntityOnTag(&torso, &legs, legs.hModel, "tag_torso");
+	CG_AddRefEntityWithPowerups(&torso, &cent->currentState, TEAM_FREE);
+	xq_particle_arbiter(cent, legs_only ? &legs : &torso);
 
-    CG_PositionRotatedEntityOnTag(&head, &torso, torso.hModel, "tag_head");
-    CG_AddRefEntityWithPowerups(&head, &cent->currentState, TEAM_FREE);
+	if (!legs_only) {
+		CG_PositionRotatedEntityOnTag(&head, &torso, torso.hModel, "tag_head");
+	    CG_AddRefEntityWithPowerups(&head, &cent->currentState, TEAM_FREE);
+	}
+
 
 
 	if (es->xq_app_held_primary_model > 0) {
 		// draw melee weapon or held item
-		xq_draw_held(cent, &torso, NULL, es->xq_app_held_primary_model, 1, 0);
+		xq_draw_held(cent, legs_only ? &legs : &torso, NULL, es->xq_app_held_primary_model, 1, 0);
 	} else {
 		// add the gun / barrel / flash
-		CG_AddPlayerWeapon(&torso, NULL, cent, -(es->xq_app_held_primary_model), 0);
+		CG_AddPlayerWeapon(legs_only ? &legs : &torso, NULL, cent, -(es->xq_app_held_primary_model), 0);
 	}
 
-	xq_draw_held(cent, &torso, NULL, es->xq_app_held_secondary_model, 2, 0);
+	xq_draw_held(cent, legs_only ? &legs : &torso, NULL, es->xq_app_held_secondary_model, 2, 0);
 
 
 	xq_drawbbox(cent);
-	xq_name_plate(cent, &head);
+	xq_name_plate(cent, legs_only ? &legs : &head);
 }
 
 void xq_npc_draw(centity_t *cent) {
@@ -847,17 +816,17 @@ void xq_npc_draw(centity_t *cent) {
 	}
 	switch (model->type) {
 		case XQ_MODEL_TYPE_SIMPLE:
-			draw_npc_simple(cent);
+			draw_npc(cent, 0, 1);
 			VectorCopy(cent->lerpOrigin, cent->xq_previous_origin);
 			break;
 		case XQ_MODEL_TYPE_Q3PLAYER:
 			if (es->eType == ET_XQ_MOB) {
 				// Live NPC
-				draw_npc_q3player(cent, 0);
+				draw_npc(cent, 0, 0);
 				VectorCopy(cent->lerpOrigin, cent->xq_previous_origin);
 			} else {
 				// PC or NPC corpse
-				draw_npc_q3player(cent, 1);
+				draw_npc(cent, 1, 0);
 			}
 			break;
 		default:
