@@ -5,11 +5,11 @@
 
 #include "../cg_local.h"
 
-#define FAR_FADE_START		450		// name plate starts fading out if the distance to it is over this much
-#define CLOSE_FADE_START	75		// or closer that this
+#define FAR_FADE_START		450		// name plate starts fading out if the distance to it is higher than this
+#define CLOSE_FADE_START	75		// or lesser than this
 #define FAR_CUTOFF			600		// name plate isn't displayed at all for distances over this much
 #define CLOSE_CUTOFF		20		// or under this much
-#define TARGET_PULSE_DEPTH	10		// targeted nameplate will pulsate betweet 100 and that many percent
+#define TARGET_PULSE_DEPTH	10		// targeted nameplate will pulsate between 100 and that much alpha percent
 #define TARGET_PULSE_STEP	3		// the higher, the faster the target pulse will be
 
 static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, int alpha, vec3_t col) {
@@ -35,7 +35,7 @@ static void showPlate(centity_t *cent, qhandle_t shader, refEntity_t *refent, in
     ent.shaderRGBA[3] = alpha;
 
 
-	if (refent) {
+	if (refent && refent->hModel) {
 		char *tag = "tag_head";
 		int add_height = 14;
 
