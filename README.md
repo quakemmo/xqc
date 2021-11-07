@@ -29,7 +29,7 @@ Discord server: https://discord.gg/DPhhktJ5ZC
 
 
 
-Credits
+CREDITS
 =======
 
 - id Software and the Ioquake3 maintainers and contributors: Quake 3 code base
