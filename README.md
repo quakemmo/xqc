@@ -20,22 +20,17 @@ Generally speaking, K&R / Linux kernel C coding style applies, with the followin
 	- Functions have the opening brace on the same line as the function name
 	- Typedefs are welcome
 
-
 CONTACT
 =======
 Suggestions are welcome at quakemmo@gmail.com
 Discord server: https://discord.gg/DPhhktJ5ZC
 
 
-
-
 CREDITS
 =======
-
 - id Software and the Ioquake3 maintainers and contributors: Quake 3 code base
 - the OpenArena project: assets
 - Henrique Lazarini (aka Ails): the 34x34 icon set
 - HornedGodSlaine @ DeviantArt: book background image
 - turbosquid.com: (at least) the 2-handed axe model
 - the Sauerbraten project: a few models
-
