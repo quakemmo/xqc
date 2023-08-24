@@ -419,7 +419,7 @@ int					qw_TopZI(void);
 
 // object.c
 qw_obj_click_t *	qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough, int skip_type);
-int					qw_ObjZICompareFnc(const void *a, const void *b);
+int					qw_ObjZICompareFnc(const void *a, const void *b, void *att);
 void				qw_ObjDraw(qw_window_t *win, int attachnum);
 void				qw_ObjDetach(int win, int oid);
 void				qw_ObjDetachFromAll(int oid);

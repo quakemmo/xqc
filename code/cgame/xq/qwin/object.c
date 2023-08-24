@@ -1,7 +1,7 @@
 #include "../../cg_local.h"
 
 // This is used by qsort
-qw_obj_attach_t *xqui_tmp_obj_att;
+//qw_obj_attach_t *xqui_tmp_obj_att;
 
 qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough, int skip_type) {
 	// Find the highest zindex object at mx/my
@@ -71,22 +71,23 @@ qw_obj_click_t *qw_ObjectFindXY(int win, int mx, int my, int skip_clickthrough, 
 
 	return &ret;
 }
-int qw_ObjZICompareFnc(const void *a, const void *b) {
+int qw_ObjZICompareFnc(const void *a, const void *b, void *att) {
 
 	// See if we have explicit zindex values that must be honored
-	int azi = xqui_tmp_obj_att[*(int*)a].zindex;
-	int bzi = xqui_tmp_obj_att[*(int*)b].zindex;
+	qw_obj_attach_t *winatt = (qw_obj_attach_t *)att;
+	int azi = winatt[*(int*)a].zindex;
+	int bzi = winatt[*(int*)b].zindex;
 	if (azi > bzi) return 1;
 	if (azi < bzi) return -1;
 
 
 	// same zindex for both elements, we untie by attach order, the object that was attached first is considered lower zindex
-	int aoid = xqui_tmp_obj_att[*(int*)a].num;
-	int boid = xqui_tmp_obj_att[*(int*)b].num;
+	int aoid = winatt[*(int*)a].num;
+	int boid = winatt[*(int*)b].num;
 
 	for (int i = 0;  i < QW_OBJ_PER_WIN;  i++) {
-		if (xqui_tmp_obj_att[i].num == aoid) return -1;
-		if (xqui_tmp_obj_att[i].num == boid) return 1;
+		if (winatt[i].num == aoid) return -1;
+		if (winatt[i].num == boid) return 1;
 	}
 
 	// shouldn't be reached

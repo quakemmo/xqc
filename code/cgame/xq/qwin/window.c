@@ -1,6 +1,7 @@
+#ifndef _WIN32
+	#define _GNU_SOURCE
+#endif
 #include "../../cg_local.h"
-
-qw_obj_attach_t *xqui_tmp_obj_att;
 
 static qw_window_save_t *qw_LoadAllWindows(void) {
 	char	buf[QW_SAVE_WINDOWS * (QW_MAX_WID + 30)];
@@ -367,8 +368,11 @@ void	qw_WindowDraw(int wid) {
 			sortobj[cnt++] = i;
 		}
 	}
-	xqui_tmp_obj_att = win->obj; // qsort will use this
-	qsort(sortobj, cnt, sizeof(uint32_t), qw_ObjZICompareFnc);
+	#ifdef _WIN32
+	qsort_s(sortobj, cnt, sizeof(uint32_t), qw_ObjZICompareFnc, win->obj);
+	#else
+	qsort_r(sortobj, cnt, sizeof(uint32_t), qw_ObjZICompareFnc, win->obj);
+	#endif
 
 
 	// Draw the objects attached to the window
